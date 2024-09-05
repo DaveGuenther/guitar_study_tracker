@@ -7,6 +7,7 @@ This virtual environment will be used when building the data entry form, which s
 ``` linux
 virtualenv .venv_wr
 source ./venv_wr/bin/activate
+pip install --upgrade pip setuptools wheel
 pip install requirements.txt
 ```
 Once complete, edit .venv_wr/bin/activate and set environment variables at the bottom of the file that will be used for read-write database connection: pg_user, pg_pw, pg_host, pg_port, pg_dbname, pg_schema
@@ -16,6 +17,7 @@ This virtual environment will be used when building the dashboard, which stores 
 ``` linux
 virtualenv .venv_wr
 source ./venv_wr/bin/activate
+pip install --upgrade pip setuptools wheel
 pip install requirements.txt
 ```
 Once complete, edit .venv_wr/bin/activate and set environment variables at the bottom of the file that will be used for read-only database connection: pg_user, pg_pw, pg_host, pg_port, pg_dbname, pg_schema
