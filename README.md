@@ -34,7 +34,7 @@ rsconnect write-manifest shiny data_entry_app/
 
 To deploy to shinyapps.io:
 ``` linux
-rsconnect deploy shiny --new data_entry_app/ --name dave-j-guenther --title "test_db_app_pg"
+rsconnect deploy shiny --new data_entry_app/ --name shinyapps-io --title "test_db_app_pg"
 ```
 
 ### Visual Dashboard:
