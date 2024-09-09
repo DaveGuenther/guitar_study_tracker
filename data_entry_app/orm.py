@@ -1,12 +1,14 @@
 # Core
 import os
+from dotenv import load_dotenv
 
 # Data Integration
 from sqlalchemy import Column, Integer, Text, Date
 from sqlalchemy.schema import Table, MetaData
 from sqlalchemy.orm import declarative_base
 
-schema=os.environ["pg_schema"]
+load_dotenv("variables.env")
+schema=os.getenv("pg_schema")
 
 Base = declarative_base()
 metadata = Base.metadata

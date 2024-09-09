@@ -1,3 +1,6 @@
 **.venv_wr/
 **.venv_rd/
 **__pycache__/
+data_entry_app/variables.env
+data_entry_app/manifest.json
+**rsconnect-python/

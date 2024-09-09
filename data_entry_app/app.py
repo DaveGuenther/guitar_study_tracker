@@ -29,6 +29,11 @@ def server(input, output, session):
 
     def nav_practice_session():
         ret_ui = ui.row(
+            ui.row(
+                ui.column(6,ui.input_action_button("btn_update_session", "Update", width='100%')),
+                ui.column(6,ui.input_action_button("btn_new_session", "New", width="100%")),
+            ),
+            
             ui.output_data_frame("session_summary")
         )
         return ret_ui
