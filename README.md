@@ -11,7 +11,15 @@ pip install --upgrade pip setuptools wheel
 sudo apt install libpq-dev   # for ubuntu systems  This is needed to pip install psycopg2
 pip install requirements.txt
 ```
-Once complete, edit .venv_wr/bin/activate and set environment variables at the bottom of the file that will be used for read-write database connection: pg_user, pg_pw, pg_host, pg_port, pg_dbname, pg_schema
+Once complete, create a file in the /data_entry_app directory called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
+''' text
+pg_user='*****'
+pg_pw='*****'
+pg_host='****'
+pg_port='***'
+pg_dbname='***'
+pg_schema='***'
+'''
 
 ### Visual Dashboard: .venv_rd
 This virtual environment will be used when building the dashboard, which stores read credentials as environment variables for posting to Shinyapps.io
