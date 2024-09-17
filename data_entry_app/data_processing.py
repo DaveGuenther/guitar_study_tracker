@@ -1,7 +1,11 @@
 # Core
 import pandas as pd
 
+from shiny import ui, module
+
 import database
+
+
 
 class ShinyTableModel:
 
@@ -12,21 +16,26 @@ class ShinyTableModel:
     input_form_columns=None
     summary_columns=None
 
-    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list):
+    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list, input_form_ui=None):
         self.id=id
         self.title=title
         self.db_table_model=db_table_model
         self.df_resolved=df_resolved
         self.input_form_columns=input_form_columns
         self.summary_columns=summary_columns
+        self.input_form_ui = input_form_ui
 
-
+    def inputFormUI():
+        pass
 
 shiny_data_payload = {}
 
 # Processing for Artist
 df_raw_artist = database.artist_model.df_raw
-shiny_data_payload['artist'] = ShinyTableModel('name','Name', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns))
+input_form_ui = ui.row(
+    ui.input_text(id="artist_name",label="Artist Name"),
+)
+shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui)
 
 # Processing for Song
 df_raw_song = database.song_model.df_raw

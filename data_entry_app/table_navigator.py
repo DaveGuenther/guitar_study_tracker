@@ -28,6 +28,18 @@ def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyT
 
     updateButtonVisible = reactive.value(False)
     df_selected_row = reactive.value(pd.DataFrame())
+    input_form_modal = ui.modal(
+        #f"Update {shiny_data_payload.title} - Input Form",
+        shiny_data_payload.input_form_ui,
+        ui.row(
+            ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
+            ui.column(4),
+            ui.column(4, ui.input_action_button("btn_input_form_submit", "Submit", width="100%")),
+        ),
+        title=f"Input Form - New {shiny_data_payload.title}",
+        easy_close=True,
+        footer=None,
+    )
 
     @render.data_frame
     def summary_table():
@@ -41,18 +53,18 @@ def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyT
     @reactive.effect
     @reactive.event(input.btn_update)
     def triggerUpdateButton():
-        input_form_modal = ui.modal(
-            f"Update {shiny_data_payload.title} - Input Form",
-            ui.row(
-                ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
-                ui.column(4),
-                ui.column(4, ui.input_action_button("btn_input_form_submit", "Submit", width="100%")),
-            ),
-            title="Input Form",
-            easy_close=True,
-            footer=None,
-        )
         ui.modal_show(input_form_modal)
+
+    @reactive.effect
+    @reactive.event(input.btn_input_cancel)
+    def triggerInputCancel():
+        ui.modal_remove()
+
+
+    @reactive.effect
+    @reactive.event(input.btn_input_form_submit)
+    def triggerInputFormSubmit():
+        ui.modal_remove()
 
     @reactive.effect
     def insert_update_button():
