@@ -5,7 +5,8 @@ from shiny import ui, module
 
 import database
 
-
+def default_func():
+    pass
 
 class ShinyTableModel:
 
@@ -15,8 +16,11 @@ class ShinyTableModel:
     df_resolved=None
     input_form_columns=None
     summary_columns=None
+    input_form_ui = None
+    server_function=None
+    lookup_table_data=None
 
-    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list, input_form_ui=None):
+    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list, input_form_ui=None, server_function=default_func, lookup_table_data={}):
         self.id=id
         self.title=title
         self.db_table_model=db_table_model
@@ -24,6 +28,8 @@ class ShinyTableModel:
         self.input_form_columns=input_form_columns
         self.summary_columns=summary_columns
         self.input_form_ui = input_form_ui
+        self.server_function=server_function
+        self.lookup_table_data=lookup_table_data
 
     def inputFormUI():
         pass
@@ -35,7 +41,11 @@ df_raw_artist = database.artist_model.df_raw
 input_form_ui = ui.row(
     ui.input_text(id="artist_name",label="Artist Name"),
 )
-shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui)
+
+def server_func():
+    pass
+
+shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui, server_func)
 
 # Processing for Song
 df_raw_song = database.song_model.df_raw
