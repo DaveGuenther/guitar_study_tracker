@@ -26,6 +26,8 @@ def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyT
         df_summary (pd.DataFrame):          Summarized view of the database table to show in the navigator
     """
 
+    shiny_data_payload.server_function()
+
     updateButtonVisible = reactive.value(False)
     df_selected_row = reactive.value(pd.DataFrame())
     input_form_modal = ui.modal(
@@ -58,12 +60,6 @@ def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyT
     @reactive.effect
     @reactive.event(input.btn_input_cancel)
     def triggerInputCancel():
-        ui.modal_remove()
-
-
-    @reactive.effect
-    @reactive.event(input.btn_input_form_submit)
-    def triggerInputFormSubmit():
         ui.modal_remove()
 
     @reactive.effect

@@ -1,7 +1,7 @@
 # Core
 import pandas as pd
 
-from shiny import ui, module
+from shiny import ui, module, render, reactive
 
 import database
 
@@ -40,10 +40,26 @@ shiny_data_payload = {}
 df_raw_artist = database.artist_model.df_raw
 input_form_ui = ui.row(
     ui.input_text(id="artist_name",label="Artist Name"),
+    ui.output_text(id='artist_name_output')
 )
 
 def server_func():
-    pass
+    input_form_func('artist')
+
+@module.server
+def input_form_func(input, output, session):
+    
+    output_text = reactive.value('')
+    
+    @reactive.effect
+    @reactive.event(input.btn_input_form_submit)
+    def triggerInputFormSubmit():
+        ui.modal_remove()
+        output_text.set(input.artist_name())
+
+    @render.text
+    def artist_name_output():
+        return output_text
 
 shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui, server_func)
 
