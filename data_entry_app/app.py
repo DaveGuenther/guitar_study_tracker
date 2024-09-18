@@ -29,4 +29,4 @@ def server(input, output, session):
     table_navigator.nav_server("song", data_processing.shiny_data_payload['song'])
     table_navigator.nav_server("artist", data_processing.shiny_data_payload['artist'])
         
-app = App(app_ui, server)
+app = App(app_ui, server, debug=True)

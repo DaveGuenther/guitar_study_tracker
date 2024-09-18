@@ -33,6 +33,7 @@ def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyT
     input_form_modal = ui.modal(
         #f"Update {shiny_data_payload.title} - Input Form",
         shiny_data_payload.input_form_ui,
+        #shiny_data_payload.ui_function(),
         ui.row(
             ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
             ui.column(4),

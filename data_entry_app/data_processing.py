@@ -18,9 +18,10 @@ class ShinyTableModel:
     summary_columns=None
     input_form_ui = None
     server_function=None
+    ui_function=None
     lookup_table_data=None
 
-    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list, input_form_ui=None, server_function=default_func, lookup_table_data={}):
+    def __init__(self, id:str, title:str, db_table_model:database.DatabaseModel, df_resolved:pd.DataFrame, input_form_columns:list, summary_columns:list, input_form_ui=None, server_function=default_func, ui_function=default_func, lookup_table_data={}):
         self.id=id
         self.title=title
         self.db_table_model=db_table_model
@@ -29,6 +30,7 @@ class ShinyTableModel:
         self.summary_columns=summary_columns
         self.input_form_ui = input_form_ui
         self.server_function=server_function
+        self.ui_function=ui_function
         self.lookup_table_data=lookup_table_data
 
     def inputFormUI():
@@ -43,25 +45,37 @@ input_form_ui = ui.row(
     ui.output_text(id='artist_name_output')
 )
 
+def ui_func():
+    input_ui('artist')
+
+
 def server_func():
     input_form_func('artist')
 
+@module.ui
+def input_ui():
+    return ui.row(
+    ui.input_text(id="artist_name",label="Artist Name"),
+    ui.output_text(id='artist_name_output')
+)
+
 @module.server
 def input_form_func(input, output, session):
-    
+    print("Form Processed")
     output_text = reactive.value('')
     
     @reactive.effect
-    @reactive.event(input.btn_input_form_submit)
+    @reactive.event(input.btn_input_form_submit, ignore_init=False, ignore_none=False)
     def triggerInputFormSubmit():
-        ui.modal_remove()
+        #ui.modal_remove()
+        print("Artist Name!")
         output_text.set(input.artist_name())
 
     @render.text
     def artist_name_output():
         return output_text
 
-shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui, server_func)
+shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui, server_func, ui_func)
 
 # Processing for Song
 df_raw_song = database.song_model.df_raw
