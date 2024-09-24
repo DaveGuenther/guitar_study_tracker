@@ -1,5 +1,6 @@
 # core
 import pandas as pd
+from abc import ABC, abstractmethod
 
 # Web/Visual Frameworks
 from shiny import module, reactive, render, ui, req
@@ -7,71 +8,71 @@ from shiny import module, reactive, render, ui, req
 # Web App Specific
 import data_processing
 
-@module.ui
-def nav_ui(shiny_data_payload:data_processing.ShinyTableModel):
-    return ui.row(
-        ui.row(ui.column(4, ui.div(id=f"{shiny_data_payload.id}_btn_update_placeholder")),
-            ui.column(4),
-            ui.column(4, ui.input_action_button(
-                "btn_new", "New", width="100%")),
-            ),
-        ui.output_data_frame("summary_table")
-    )
+class ShinyFormTemplate:
+    _namespace_id = None
+    _form_data=None
+    
+    def __init__(self, namespace_id:str, form_data:data_processing.ShinyInputTableModel):
+        """
+        _namespace_id (str):            This is the id value of the namespace that the form's shiny module will use.  It will prefix the id value of every applicable component on the DOM
+        _df_form_data (pd.DataFrame):   This is the dataframe that can either be used to populate the form data as it would be 
 
-@module.server
-def nav_server(input, output, session, shiny_data_payload:data_processing.ShinyTableModel):
-    """
-        input, output, session:             Standard Shiny objects
-        prefix (str):                       Name to add to add to div ids to keep them unique in the ui
-        df_summary (pd.DataFrame):          Summarized view of the database table to show in the navigator
-    """
+        """
+        self._namespace_id=namespace_id
+        self._form_data=form_data
 
-    shiny_data_payload.server_function()
+    def ui_call(self):
+        @module.ui
+        def nav_ui():
+            return ui.row(
+                ui.row(ui.column(4, ui.div(id=f"{self._namespace_id}_btn_update_placeholder")),
+                    ui.column(4),
+                    ui.column(4, ui.input_action_button(
+                        "btn_new", "New", width="100%")),
+                    ),
+                ui.output_data_frame("summary_table")
+            )
+        return nav_ui(self._namespace_id)
 
-    updateButtonVisible = reactive.value(False)
-    df_selected_row = reactive.value(pd.DataFrame())
-    input_form_modal = ui.modal(
-        #f"Update {shiny_data_payload.title} - Input Form",
-        shiny_data_payload.input_form_ui,
-        #shiny_data_payload.ui_function(),
-        ui.row(
-            ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
-            ui.column(4),
-            ui.column(4, ui.input_action_button("btn_input_form_submit", "Submit", width="100%")),
-        ),
-        title=f"Input Form - New {shiny_data_payload.title}",
-        easy_close=True,
-        footer=None,
-    )
+    def server_call(self, input, output, session):
 
-    @render.data_frame
-    def summary_table():
-        return render.DataGrid(
-            shiny_data_payload.df_resolved[shiny_data_payload.summary_columns],
-            width="100%",
-            height="100%",
-            selection_mode="row"
-        )
+        @module.server
+        def nav_server(input, output,session):
+            updateButtonVisible = reactive.value(False)
+            df_selected_row = reactive.value(pd.DataFrame())
 
-    @reactive.effect
-    @reactive.event(input.btn_update)
-    def triggerUpdateButton():
-        ui.modal_show(input_form_modal)
+            @render.data_frame
+            def summary_table():
+                return render.DataGrid(
+                    self._form_data.df_summary,
+                    width="100%",
+                    height="100%",
+                    selection_mode="row"
+                )
+            
+            @reactive.effect
+            @reactive.event(input.btn_update)
+            def triggerUpdateButton():
+                self._form_data.server_call(input,output,session)
 
-    @reactive.effect
-    @reactive.event(input.btn_input_cancel)
-    def triggerInputCancel():
-        ui.modal_remove()
+            @reactive.effect
+            def insert_update_button():
+                data_selected = summary_table.data_view(selected=True)
+                req(not (data_selected.empty or updateButtonVisible.get()))
+                ui.insert_ui(
+                    ui.input_action_button("btn_update",
+                                        "Update", width='100%'),
+                    selector=f"#{self._namespace_id}_btn_update_placeholder",
+                    where="beforeBegin"
+                )
+                updateButtonVisible.set(True)
+                df_selected_row.set(data_selected.copy())
+        
+        return nav_server(self._namespace_id)
 
-    @reactive.effect
-    def insert_update_button():
-        data_selected = summary_table.data_view(selected=True)
-        req(not (data_selected.empty or updateButtonVisible.get()))
-        ui.insert_ui(
-            ui.input_action_button("btn_update",
-                                   "Update", width='100%'),
-            selector=f"#{shiny_data_payload.id}_btn_update_placeholder",
-            where="beforeBegin"
-        )
-        updateButtonVisible.set(True)
-        df_selected_row.set(data_selected.copy())
+    def _server_common(self, input, output, session):
+        pass
+
+#class ArtistForm(ShinyFormTemplate):
+#    pass
+
