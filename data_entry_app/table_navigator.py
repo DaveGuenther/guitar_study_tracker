@@ -41,6 +41,7 @@ class ShinyFormTemplate:
         def nav_server(input, output,session):
             updateButtonVisible = reactive.value(False)
             df_selected_row = reactive.value(pd.DataFrame())
+            df_selected_id=reactive.value(None)
 
             @render.data_frame
             def summary_table():
@@ -52,10 +53,30 @@ class ShinyFormTemplate:
                 )
             
             @reactive.effect
+            @reactive.event(df_selected_row)
+            def setSelectedID():
+                if df_selected_row().shape[0]>0:
+                    df_selected_id.set(df_selected_row()['id'].values[0])
+                else:
+                    df_selected_id.set(None)
+
+            @reactive.effect
             @reactive.event(input.btn_update)
             def triggerUpdateButton():
-                ui.insert_ui(self._form_data.ui_call(), selector=f"#{self._namespace_id}_modal_ui_placeholder", where="beforeBegin")
+                ui.insert_ui(self._form_data.ui_call(df_selected_id()), 
+                             selector=f"#{self._namespace_id}_modal_ui_placeholder", 
+                             where="beforeBegin")
                 self._form_data.server_call(input,output,session)
+
+            
+            @reactive.effect
+            @reactive.event(input.btn_new)
+            def triggerNewButton():
+                ui.insert_ui(self._form_data.ui_call(None), 
+                             selector=f"#{self._namespace_id}_modal_ui_placeholder", 
+                             where="beforeBegin")
+                self._form_data.server_call(input,output,session)
+
 
             @reactive.effect
             def insert_update_button():

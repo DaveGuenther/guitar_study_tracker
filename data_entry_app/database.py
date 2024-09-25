@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import pandas as pd
 
 # Data Integration
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, insert, update, delete
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import Table
 
@@ -32,6 +32,30 @@ class DatabaseSession:
         Selects all data from the defined table model and returns as a pd.DataFrame"""
         return pd.read_sql(select(model), self.__session.bind)
 
+    def updateRecord(self, model, row_id, row_data):
+        """
+        Given a single row dataframe, this will add a record to an existing table
+        """
+        stmt = update(model).where(model.c.id == row_id).values(row_data)
+        self.__session.execute(stmt)
+        self.__session.commit()
+        print("hi")
+        #df_rows.to_sql()
+
+    def addRecord(self, model, row_data):
+        """
+        Given a single row dataframe, this will add a record to an existing table
+        """
+        stmt = insert(model).values(row_data)
+        self.__session.execute(stmt)
+        self.__session.commit()
+        print("hi")
+        #df_rows.to_sql()
+
+    def deleteRecord(self, model, row_id):
+        stmt = delete(model).where(model.c.id == row_id)
+        self.__session.execute(stmt)
+        self.__session.commit()
 
 class DatabaseModel:
     __session = None
@@ -49,6 +73,27 @@ class DatabaseModel:
         """
         self.df_raw = self.__session.readTable(self.__orm)
 
+
+    def update(self, df_row):
+        row = df_row.loc[0]
+        row_id = row['id']
+        row = row.drop('id',errors='ignore')
+        row_data = {key:value for key, value in zip(row.keys(), row.values)}
+        self.__session.updateRecord(self.__orm, row_id, row_data)
+        print("updated")
+
+
+    def insert(self, df_row):
+        row = df_row.loc[0]
+        row = row.drop('id',errors='ignore')
+        row_data = {key:value for key, value in zip(row.keys(), row.values)}
+        self.__session.insertRecord(self.__orm, row_data)
+        print("added")
+
+    def delete(self, df_row):
+        row = df_row.loc[0]
+        row_id=row['id']
+        self.__session.deleteRecord(self.__orm, row_id)
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")

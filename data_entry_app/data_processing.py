@@ -17,7 +17,8 @@ class ShinyInputTableModel(ABC):
     _title=None
     _db_table_model=None
     df_summary=None
-    
+    _df_selected_id = None # This is the selected row passed in from the table navigator
+
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel):
         self._namespace_id=namespace_id
         self._title=title
@@ -38,10 +39,11 @@ class ShinyInputTableModel(ABC):
         """
         pass
 
-    def ui_call(self):
+    def ui_call(self, df_selected_id):
         """
         This is the blanket parent modal code ui code that sets up the modal with cancel and submit buttons
         """
+        self._df_selected_id = df_selected_id
         @module.ui
         def ui_modal():
             input_form_modal = ui.modal(
@@ -68,33 +70,54 @@ class ArtistInputTableModel(ShinyInputTableModel):
     def _processData(self):
         self.df_summary = self._db_table_model.df_raw.rename({'name':'Artist'},axis=1)
 
+    def __init_name(self):
+        if self._df_selected_id:
+            # provide name of this 
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['name'].values[0])
+        else:
+            return None
+    
     def _ui_specific_code(self):
         """
-        Artist Modal Form code goes here
+        Artist Modal Form UI code goes here
         """
         return ui.row(
-            ui.input_text(id="name",label=f"{self._title} Name"),
+            ui.output_text(id="id_text"),ui.br(),
+            ui.input_text(id="name",label=f"{self._title} Name", value=self.__init_name()),
             ui.output_text(id='name_output'),
         ),
 
     def server_call(self, input, output, session):
+        """
+        Artist Modal Form Server code goes here
+        """
         @module.server
         def input_form_func(input, output, session):
 
-            output_text = reactive.value('')
+            output_name = reactive.value('')
             
             @reactive.effect
-            @reactive.event(input.btn_input_form_submit, ignore_init=False, ignore_none=False)
+            @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
             def triggerInputFormSubmit():
-                #ui.modal_remove()
                 print(f"{self._title} Name!")
-                output_text.set(input.name())
+                output_name.set(input.name())
+                df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],'name':[input.name()]})
+                if self._df_selected_id:
+                    self._db_table_model.update(df_row_to_database)
+                else:
+                    self._db_table_model.insert(df_row_to_database)
+
+            @render.text
+            def id_text():
+                if self._df_selected_id:
+                    return "id: "+str(self._df_selected_id)
+                else:
+                    return "id: [NEW RECORD]"
 
             @render.text
             def name_output():
-                return output_text()
+                return output_name()
             
-
             @reactive.effect
             @reactive.event(input.btn_input_cancel)
             def triggerInputCancel():
