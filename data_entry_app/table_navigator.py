@@ -30,7 +30,8 @@ class ShinyFormTemplate:
                     ui.column(4, ui.input_action_button(
                         "btn_new", "New", width="100%")),
                     ),
-                ui.output_data_frame("summary_table")
+                ui.output_data_frame("summary_table"),
+                ui.div(id=f"{self._namespace_id}_modal_ui_placeholder")
             )
         return nav_ui(self._namespace_id)
 
@@ -53,6 +54,7 @@ class ShinyFormTemplate:
             @reactive.effect
             @reactive.event(input.btn_update)
             def triggerUpdateButton():
+                ui.insert_ui(self._form_data.ui_call(), selector=f"#{self._namespace_id}_modal_ui_placeholder", where="beforeBegin")
                 self._form_data.server_call(input,output,session)
 
             @reactive.effect

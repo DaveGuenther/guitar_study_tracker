@@ -45,7 +45,7 @@ class ShinyInputTableModel(ABC):
         @module.ui
         def ui_modal():
             input_form_modal = ui.modal(
-                self._specific_ui_code(),
+                self._ui_specific_code(),
                 ui.row(
                     ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
                     ui.column(4),
@@ -74,8 +74,8 @@ class ArtistInputTableModel(ShinyInputTableModel):
         """
         return ui.row(
             ui.input_text(id="name",label=f"{self._title} Name"),
-            ui.output_text(id='name_output')
-        )
+            ui.output_text(id='name_output'),
+        ),
 
     def server_call(self, input, output, session):
         @module.server
@@ -88,11 +88,11 @@ class ArtistInputTableModel(ShinyInputTableModel):
             def triggerInputFormSubmit():
                 #ui.modal_remove()
                 print(f"{self._title} Name!")
-                output_text.set(input.name_output())
+                output_text.set(input.name())
 
             @render.text
             def name_output():
-                return output_text
+                return output_text()
             
 
             @reactive.effect
