@@ -1,6 +1,6 @@
 # Core
 import os
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import pandas as pd
 
 # Data Integration
@@ -17,9 +17,13 @@ class DatabaseSession:
     """
     __session=None
 
-    def __init__(self, user:str, password:str, host:str, port:str, dbname:str):
+    def __init__(self, host:str, port:str, dbname:str):
+        self.__host = host
+        self.__port = port
+        self.__dbname = dbname
 
-        connect_string = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}'
+    def connect(self, user:str, password:str):
+        connect_string = f'postgresql+psycopg2://{user}:{password}@{self.__host}:{self.__port}/{self.__dbname}'
 
         # Connect to db and establish session
         engine = create_engine(connect_string)
@@ -30,19 +34,20 @@ class DatabaseSession:
     def readTable(self, model):
         """
         Selects all data from the defined table model and returns as a pd.DataFrame"""
-        return pd.read_sql(select(model), self.__session.bind)
+        return pd.read_sql(select(model), self.__session.bind).copy()
 
     def updateRecord(self, model, row_id, row_data):
         """
         Given a single row dataframe, this will add a record to an existing table
         """
+        row_id = int(row_id)
         stmt = update(model).where(model.c.id == row_id).values(row_data)
         self.__session.execute(stmt)
         self.__session.commit()
         print("hi")
         #df_rows.to_sql()
 
-    def addRecord(self, model, row_data):
+    def insertRecord(self, model, row_data):
         """
         Given a single row dataframe, this will add a record to an existing table
         """
@@ -65,6 +70,10 @@ class DatabaseModel:
         self.__session = db_session
         self.__orm = orm_model
 
+        
+
+    def connect(self, user:str, pw:str):
+        self.__session.connect(user, pw)
         self.read()
 
     def read(self):
@@ -80,6 +89,7 @@ class DatabaseModel:
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.updateRecord(self.__orm, row_id, row_data)
+        self.read()
         print("updated")
 
 
@@ -88,6 +98,7 @@ class DatabaseModel:
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.insertRecord(self.__orm, row_data)
+        self.read()
         print("added")
 
     def delete(self, df_row):
@@ -96,19 +107,19 @@ class DatabaseModel:
         self.__session.deleteRecord(self.__orm, row_id)
 
 # pull database location and credential information from env variables
-load_dotenv("variables.env")
+#load_dotenv("variables.env")
 
-pg_session = DatabaseSession(
-    os.getenv("pg_user"),
-    os.getenv("pg_pw"),
-    os.getenv("pg_host"),
-    os.getenv("pg_port"),
-    os.getenv("pg_dbname")
-    )
+#pg_session = DatabaseSession(
+#    os.getenv("pg_user"),
+#    os.getenv("pg_pw"),
+#    os.getenv("pg_host"),
+#    os.getenv("pg_port"),
+#    os.getenv("pg_dbname")
+#    )
 
-artist_model = DatabaseModel(orm.tbl_artist,pg_session)
-song_model = DatabaseModel(orm.tbl_song, pg_session)
-session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
+#artist_model = DatabaseModel(orm.tbl_artist,pg_session)
+#song_model = DatabaseModel(orm.tbl_song, pg_session)
+#session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
 
 
 # pull tables into dataframes using orm definitions

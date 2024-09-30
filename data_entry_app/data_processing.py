@@ -18,15 +18,23 @@ class ShinyInputTableModel(ABC):
     _db_table_model=None
     df_summary=None
     _df_selected_id = None # This is the selected row passed in from the table navigator
+    _data_processed=False
 
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel):
         self._namespace_id=namespace_id
         self._title=title
         self._db_table_model=db_table_model
-        self._processData()
+        #self.processData()
+
+    def _dataProcessed(self):
+        if self._data_processed==False:
+            self._data_processed=True
+            return False
+        else:
+            return True
 
     @abstractmethod
-    def _processData():
+    def processData():
         """
         This handles form specific data processing code needed to format column names or resolve lookups
         """
@@ -62,13 +70,14 @@ class ShinyInputTableModel(ABC):
         return ui_modal(self._namespace_id)
 
     @abstractmethod
-    def server_call(self, input, output, session):
+    def server_call(self, input, output, session, summary_df):
         pass
 
 class ArtistInputTableModel(ShinyInputTableModel):    
 
-    def _processData(self):
-        self.df_summary = self._db_table_model.df_raw.rename({'name':'Artist'},axis=1)
+    def processData(self):
+        #if not self._dataProcessed():
+        self.df_summary = self._db_table_model.df_raw.rename({'name':'Artist'},axis=1).copy()
 
     def __init_name(self):
         if self._df_selected_id:
@@ -87,12 +96,13 @@ class ArtistInputTableModel(ShinyInputTableModel):
             ui.output_text(id='name_output'),
         ),
 
-    def server_call(self, input, output, session):
+    def server_call(self, input, output, session, summary_df):
         """
         Artist Modal Form Server code goes here
         """
+
         @module.server
-        def input_form_func(input, output, session):
+        def input_form_func(input, output, session, summary_df):
 
             output_name = reactive.value('')
             
@@ -106,6 +116,10 @@ class ArtistInputTableModel(ShinyInputTableModel):
                     self._db_table_model.update(df_row_to_database)
                 else:
                     self._db_table_model.insert(df_row_to_database)
+                
+                ui.modal_remove()
+                self.processData()
+                summary_df.set(self.df_summary)
 
             @render.text
             def id_text():
@@ -123,70 +137,32 @@ class ArtistInputTableModel(ShinyInputTableModel):
             def triggerInputCancel():
                 ui.modal_remove()
 
-        input_form_func(self._namespace_id)
+            return self.df_summary.copy
 
-artist_input_table_model = ArtistInputTableModel(namespace_id = 'artist', 
-                                                 title="Artist", 
-                                                 db_table_model=database.artist_model)
+        input_form_func(self._namespace_id, summary_df)
 
-
-shiny_data_payload = {}
-
-# Processing for Artist
-df_raw_artist = database.artist_model.df_raw
-input_form_ui = ui.row(
-    ui.input_text(id="artist_name",label="Artist Name"),
-    ui.output_text(id='artist_name_output')
-)
-
-def ui_func():
-    input_ui('artist')
+#artist_input_table_model = ArtistInputTableModel(namespace_id = 'artist', 
+#                                                 title="Artist", 
+#                                                 db_table_model=database.artist_model)
 
 
-def server_func():
-    input_form_func('artist')
-
-@module.ui
-def input_ui():
-    return ui.row(
-    ui.input_text(id="artist_name",label="Artist Name"),
-    ui.output_text(id='artist_name_output')
-)
-
-@module.server
-def input_form_func(input, output, session):
-    print("Form Processed")
-    output_text = reactive.value('')
-    
-    @reactive.effect
-    @reactive.event(input.btn_input_form_submit, ignore_init=False, ignore_none=False)
-    def triggerInputFormSubmit():
-        #ui.modal_remove()
-        print("Artist Name!")
-        output_text.set(input.artist_name())
-
-    @render.text
-    def artist_name_output():
-        return output_text
 
 #shiny_data_payload['artist'] = ShinyTableModel('artist','Artist', database.artist_model,df_raw_artist,list(df_raw_artist.columns),list(df_raw_artist.columns),input_form_ui, server_func, ui_func)
 
 # Processing for Song
-df_raw_song = database.song_model.df_raw
-df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
-df_resolved_song = df_resolved_song.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
-df_resolved_song['Start Date'] = pd.to_datetime(df_resolved_song['start_date']).dt.strftime("%m/%d/%Y")
-df_resolved_song['Off Book Date'] = pd.to_datetime(df_resolved_song['off_book_date']).dt.strftime("%m/%d/%Y")
-df_resolved_song['Play Ready Date'] = pd.to_datetime(df_resolved_song['play_ready_date']).dt.strftime("%m/%d/%Y")
-df_resolved_song = df_resolved_song.rename({'title':'Title'},axis=1)
+#df_raw_song = database.song_model.df_raw
+#df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+#df_resolved_song = df_resolved_song.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
+#df_resolved_song['Start Date'] = pd.to_datetime(df_resolved_song['start_date']).dt.strftime("%m/%d/%Y")
+#df_resolved_song['Off Book Date'] = pd.to_datetime(df_resolved_song['off_book_date']).dt.strftime("%m/%d/%Y")
+#df_resolved_song['Play Ready Date'] = pd.to_datetime(df_resolved_song['play_ready_date']).dt.strftime("%m/%d/%Y")
+#df_resolved_song = df_resolved_song.rename({'title':'Title'},axis=1)
 #shiny_data_payload['song'] = ShinyTableModel('song','Song', database.song_model,df_resolved_song,list(df_raw_song.columns),['id','Title','Composer','Arranger','Start Date','Off Book Date','Play Ready Date'])
 
 # Processing for Practice Session
-df_raw_practice_sessions = database.session_model.df_raw
-df_resolved_sessions = df_raw_practice_sessions.merge(df_resolved_song,how='left', left_on='l_song_id', right_on='id').drop(['l_song_id','id_y'],axis=1).rename({'id_x':'id'},axis=1)
-df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
-df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song'},axis=1)
+#df_raw_practice_sessions = database.session_model.df_raw
+#df_resolved_sessions = df_raw_practice_sessions.merge(df_resolved_song,how='left', left_on='l_song_id', right_on='id').drop(['l_song_id','id_y'],axis=1).rename({'id_x':'id'},axis=1)
+#df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
+#df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song'},axis=1)
 #shiny_data_payload['practice_session'] = ShinyTableModel('practice_session','Practice Session', database.session_model,df_resolved_sessions,list(df_raw_practice_sessions.columns),['id','Session Date','Song','Duration','Notes'])
 
-
-print("hi")
