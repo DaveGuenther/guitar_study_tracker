@@ -1,5 +1,5 @@
 # guitar_study_tracker
-Private Shiny web form for data entry and public (Shinyapps.io) dashboard to track progress and communicate with teacher
+Public shiny app for data entry to a postgres database and public app with visual dashboard (Shinyapps.io) to track guitar study progress and communicate with my teacher.  Class diagrams in the docs/ folder are created with Dia Diagram Editor: http://dia-installer.de/.
 
 ## Env Setup
 ### Data Entry App: .venv_wr
