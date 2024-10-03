@@ -44,8 +44,6 @@ class DatabaseSession:
         stmt = update(model).where(model.c.id == row_id).values(row_data)
         self.__session.execute(stmt)
         self.__session.commit()
-        print("hi")
-        #df_rows.to_sql()
 
     def insertRecord(self, model, row_data):
         """
@@ -54,8 +52,6 @@ class DatabaseSession:
         stmt = insert(model).values(row_data)
         self.__session.execute(stmt)
         self.__session.commit()
-        print("hi")
-        #df_rows.to_sql()
 
     def deleteRecord(self, model, row_id):
         stmt = delete(model).where(model.c.id == row_id)
@@ -69,8 +65,6 @@ class DatabaseModel:
     def __init__(self, orm_model: Table, db_session: DatabaseSession):
         self.__session = db_session
         self.__orm = orm_model
-
-        
 
     def connect(self, user:str, pw:str):
         self.__session.connect(user, pw)
@@ -90,8 +84,6 @@ class DatabaseModel:
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.updateRecord(self.__orm, row_id, row_data)
         self.read()
-        print("updated")
-
 
     def insert(self, df_row):
         row = df_row.loc[0]
@@ -99,7 +91,6 @@ class DatabaseModel:
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.insertRecord(self.__orm, row_data)
         self.read()
-        print("added")
 
     def delete(self, df_row):
         row = df_row.loc[0]

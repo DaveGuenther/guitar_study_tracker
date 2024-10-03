@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 from dotenv import load_dotenv
+import logging
 
 # Web/Visual frameworks
 from shiny import App, ui, render, reactive, types, req, module
@@ -9,8 +10,10 @@ from shiny import App, ui, render, reactive, types, req, module
 # App Specific Code
 import orm # database models
 from database import DatabaseSession, DatabaseModel
-from data_processing import ArtistInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
+from data_processing import ArtistInputTableModel, SongInputTableModel, SessionInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
 from table_navigator import ShinyFormTemplate
+
+logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")
@@ -27,13 +30,26 @@ artist_model = DatabaseModel(orm.tbl_artist,pg_session)
 song_model = DatabaseModel(orm.tbl_song, pg_session)
 session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
 
+# Establish schema specific table models (tying together their lookups)
 artist_input_table_model = ArtistInputTableModel(namespace_id = 'artist', 
                                             title="Artist", 
                                             db_table_model=artist_model)
 
-# Initialize artist input form
-artist_form_template = ShinyFormTemplate('artist',artist_input_table_model)
+song_input_table_model = SongInputTableModel(namespace_id = 'song', 
+                                            title="Song", 
+                                            db_table_model=song_model,
+                                            db_artist_model=artist_model) #required lookup
 
+session_input_table_model = SessionInputTableModel(namespace_id = 'session', 
+                                            title="Session", 
+                                            db_table_model=session_model,
+                                            db_song_model=song_model, # required lookup
+                                            db_artist_model=artist_model) # required lookup
+
+# Initialize table navigator form
+artist_form_template = ShinyFormTemplate('artist',artist_input_table_model)
+song_form_template = ShinyFormTemplate('song',song_input_table_model)
+session_form_template = ShinyFormTemplate('session',session_input_table_model)
 
 app_ui = ui.page_fluid(
 
@@ -52,58 +68,55 @@ app_ui = ui.page_fluid(
 def server(input, output, session):
     
     connected_to_db = reactive.value(False)
-    #artist_input_table_model = reactive.value(None)
-    #artist_form_template = reactive.value(None)
 
     @reactive.effect
     @reactive.event(input.btn_login, ignore_none=True, ignore_init=True)
     def btnLogin():
+             
+        with reactive.isolate():
+            user_name=input.user()
+            pw=input.password()
 
-        if False==False:                
-            with reactive.isolate():
-                user_name=input.user()
-                pw=input.password()
+        # connect to database
+        artist_model.connect(user_name, pw)
+        song_model.connect(user_name, pw)
+        session_model.connect(user_name, pw)
 
+        # begin data processing in artist table navigator
+        artist_input_table_model.processData()
+        song_input_table_model.processData()
+        session_input_table_model.processData()
 
+        # remove user/pw screen
+        ui.remove_ui(selector="#credentials_input")
 
-            # connect to database
-            artist_model.connect(user_name, pw)
-
-            # begin data processing in artist table navigator
-            artist_input_table_model.processData()
-
-            # remove user/pw screen
-            ui.remove_ui(selector="#credentials_input")
-            print("Login Clicked!!")
-            # Insert the main tabs
-            ui.insert_ui(
-                selector=f"#nav_panels", 
-                where="beforeBegin",
-                ui= ui.page_navbar(
-                    
-                    ui.nav_panel("New Artist", "New Artist - Input Form",
-                        artist_form_template.ui_call(),
-                    ), 
-                    #,
-                    #ui.nav_panel("New Practice Session", "New Practice Session - Input Form",
-                    #    table_navigator.nav_ui("practice_session", data_processing.shiny_data_payload['practice_session'])),            
-                    #ui.nav_panel("New Song", "New Song - Input Form",
-                    #    table_navigator.nav_ui("song", data_processing.shiny_data_payload['song'])),
-
-                        #table_navigator.nav_ui("artist", data_processing.shiny_data_payload['artist'])),
-                    title="Guitar Study Tracker",
-                    id="page",
+        # Insert the main tabs
+        ui.insert_ui(
+            selector=f"#nav_panels", 
+            where="beforeBegin",
+            ui= ui.page_navbar(
+                # Execute ui code for shiny modules
+                ui.nav_panel("Sessions", 
+                    session_form_template.ui_call(),
+                ), 
+                ui.nav_panel("Songs",
+                    song_form_template.ui_call(),
                 ),
-            )
+                
+                ui.nav_panel("Artists", 
+                    artist_form_template.ui_call(),
+                ),           
+                title="Guitar Study Tracker",
+                id="page",
+            ),
+        )
 
-            connected_to_db.set(True)
-            artist_form_template.server_call(input, output, server)
-            
+        connected_to_db.set(True)
 
-    #table_navigator.nav_server("practice_session", data_processing.shiny_data_payload['practice_session'])
-    #table_navigator.nav_server("song", data_processing.shiny_data_payload['song'])
-    #table_navigator.nav_server("artist", data_processing.shiny_data_payload['artist'])
-    
+        # Execute server code for shiny modules
+        artist_form_template.server_call(input, output, session)
+        song_form_template.server_call(input, output, session)
+        session_form_template.server_call(input, output, session)    
 
 
 app = App(app_ui, server, debug=True)

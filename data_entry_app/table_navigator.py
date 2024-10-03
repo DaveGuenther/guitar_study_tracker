@@ -89,7 +89,6 @@ class ShinyFormTemplate:
                              selector=f"#{self._namespace_id}_modal_ui_placeholder", 
                              where="beforeBegin")
                 self._form_data.server_call(input,output,session, df_summary)
-                updateButtonVisible.set(False)
                 df_selected_row.set(pd.DataFrame())
                 df_selected_id.set(None)
 
