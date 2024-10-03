@@ -11,6 +11,7 @@ import data_processing
 class ShinyFormTemplate:
     _namespace_id = None
     _form_data=None
+    __server_executed=False
     
     def __init__(self, namespace_id:str, form_data:data_processing.ShinyInputTableModel):
         """
@@ -75,7 +76,9 @@ class ShinyFormTemplate:
                 
                 #Server (notice that we pass in df_summary as reactive value to force redraw the table when the modal is closed)
                 ui.remove_ui(f"#{self._namespace_id}-btn_update") # Hide Update Button
-                self._form_data.server_call(input,output,session, df_summary)
+                if self.__server_executed==False:
+                    self._form_data.server_call(input,output,session, df_summary)
+                    self.__server_executed=True
                 updateButtonVisible.set(False)
                 df_selected_row.set(pd.DataFrame())
                 df_selected_id.set(None)        
@@ -88,7 +91,9 @@ class ShinyFormTemplate:
                 ui.insert_ui(self._form_data.ui_call(None), 
                              selector=f"#{self._namespace_id}_modal_ui_placeholder", 
                              where="beforeBegin")
-                self._form_data.server_call(input,output,session, df_summary)
+                if self.__server_executed==False:
+                    self._form_data.server_call(input,output,session, df_summary)
+                    self.__server_executed=True
                 df_selected_row.set(pd.DataFrame())
                 df_selected_id.set(None)
 

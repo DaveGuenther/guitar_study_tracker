@@ -13,7 +13,7 @@ from database import DatabaseSession, DatabaseModel
 from data_processing import ArtistInputTableModel, SongInputTableModel, SessionInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
 from table_navigator import ShinyFormTemplate
 
-logging.basicConfig(filename='myapp.log', level=logging.INFO)
+#logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")
@@ -76,6 +76,8 @@ def server(input, output, session):
         with reactive.isolate():
             user_name=input.user()
             pw=input.password()
+
+
 
         # connect to database
         artist_model.connect(user_name, pw)
