@@ -42,6 +42,7 @@ tbl_practice_session = Table(
     Column('session_date', Date, nullable=False),
     Column('duration', Integer, nullable=False),
     Column('notes', Text, nullable=True),
+    Column('video_url', Text, nullable=True),
     Column('l_song_id', Integer, nullable=True), # foreign key to song.id
     schema=schema,
 )
