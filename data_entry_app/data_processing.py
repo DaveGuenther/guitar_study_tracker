@@ -327,8 +327,11 @@ class SessionInputTableModel(ShinyInputTableModel):
         self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
         
         # Establish song lookup
+        df_song_lookup = df_raw_song.merge(df_raw_artist,how='left',left_on='composer',right_on='id')
+        df_song_lookup = df_song_lookup.rename({'id_x':'id'},axis=1).drop('id_y',axis=1)
+        df_song_lookup['last_name']=df_song_lookup['name'].str.split(' ').str[-1].fillna('Unknown')
         self.__song_lookup = {'':''}
-        self.__song_lookup.update({value:label for value,label in zip(df_raw_song['id'],df_raw_song['title'])})
+        self.__song_lookup.update({value:f"{artist} - {label}" for value,label,artist in zip(df_song_lookup['id'],df_song_lookup['title'],df_song_lookup['last_name'])})
 
     def __init_session_date(self):
         # provide initial value for the start date on the input form
