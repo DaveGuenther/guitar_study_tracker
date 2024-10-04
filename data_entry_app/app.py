@@ -13,7 +13,7 @@ from database import DatabaseSession, DatabaseModel
 from data_processing import ArtistInputTableModel, SongInputTableModel, SessionInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
 from table_navigator import ShinyFormTemplate
 
-logging.basicConfig(filename='myapp.log', level=logging.INFO)
+#logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")
@@ -58,12 +58,19 @@ app_ui = ui.page_fluid(
         ui.h3("Guitar Study Tracker").add_style("text-align: center;"),
         ui.input_text(id='user',label="User Name:"),
         ui.input_password(id='password', label="Password:"),
+        ui.div("Logging in without credentials will use cached read-only credentials to the database."),
         ui.input_action_button(id='btn_login',label='Login'),
         id="credentials_input",
     ),
     ui.div(id=f"nav_panels"),
 
 )
+
+def dynamic_app_title(read_only_acct):
+    if read_only_acct:
+        return "Guitar Study Tracker (READ ONLY)"
+    else:
+        return "Guitar Study Tracker"
 
 def server(input, output, session):
     
@@ -76,11 +83,18 @@ def server(input, output, session):
         with reactive.isolate():
             user_name=input.user()
             pw=input.password()
+            read_only_acct=False
+            if (not user_name)&(not pw):
+                print("Empty Username/PW, using read acct")
+                user_name = os.getenv('pg_user')
+                pw = os.getenv('pg_pw')
+                read_only_acct=True
+        
 
         # connect to database
-        artist_model.connect(user_name, pw)
-        song_model.connect(user_name, pw)
-        session_model.connect(user_name, pw)
+        artist_model.connect(user_name, pw, read_only_acct)
+        song_model.connect(user_name, pw, read_only_acct)
+        session_model.connect(user_name, pw, read_only_acct)
 
         # begin data processing in artist table navigator
         artist_input_table_model.processData()
@@ -106,7 +120,7 @@ def server(input, output, session):
                 ui.nav_panel("Artists", 
                     artist_form_template.ui_call(),
                 ),           
-                title="Guitar Study Tracker",
+                title=dynamic_app_title(read_only_acct),
                 id="page",
             ),
         )

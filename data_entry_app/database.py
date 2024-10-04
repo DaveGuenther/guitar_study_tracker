@@ -61,13 +61,15 @@ class DatabaseSession:
 class DatabaseModel:
     __session = None
     __orm = None
+    __read_only_acct=False
     df_raw = None
     def __init__(self, orm_model: Table, db_session: DatabaseSession):
         self.__session = db_session
         self.__orm = orm_model
 
-    def connect(self, user:str, pw:str):
+    def connect(self, user:str, pw:str, read_only_acct:bool):
         self.__session.connect(user, pw)
+        self.__read_only_acct=read_only_acct
         self.read()
 
     def read(self):
@@ -97,33 +99,5 @@ class DatabaseModel:
         row_id=row['id']
         self.__session.deleteRecord(self.__orm, row_id)
 
-# pull database location and credential information from env variables
-#load_dotenv("variables.env")
-
-#pg_session = DatabaseSession(
-#    os.getenv("pg_user"),
-#    os.getenv("pg_pw"),
-#    os.getenv("pg_host"),
-#    os.getenv("pg_port"),
-#    os.getenv("pg_dbname")
-#    )
-
-#artist_model = DatabaseModel(orm.tbl_artist,pg_session)
-#song_model = DatabaseModel(orm.tbl_song, pg_session)
-#session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
-
-
-# pull tables into dataframes using orm definitions
-
-#print(select(orm.tbl_song))
-#df_songs = pd.read_sql(select(orm.tbl_song), session.bind)
-#df_artists = pd.read_sql(select(orm.tbl_artist), session.bind)
-#df_practice_sessions = pd.read_sql(select(orm.tbl_practice_session), session.bind)
-#df_practice_sessions['Session Date'] = pd.to_datetime(df_practice_sessions['session_date']).dt.strftime("%m/%d/%Y")
-
-
-
-#df_summary_practice_sessions = df_practice_sessions.merge(df_songs, how='left', left_on='l_song_id', right_on='id').rename({'id_x':'id'},axis=1)[['id','Session Date','title']]
-#df_summary_songs = df_songs.merge(df_artists, how='left', left_on='composer', right_on='id').drop('composer',axis=1).rename({'id_x':'id','name':'composer'},axis=1)[['id','title','composer']]
-#df_summary_artists = df_artists[['id','name']]
-
+    def isReadOnly(self):
+        return self.__read_only_acct

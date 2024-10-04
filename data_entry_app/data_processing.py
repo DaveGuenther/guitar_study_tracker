@@ -46,7 +46,7 @@ class ShinyInputTableModel(ABC):
                 ui.row(
                     ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
                     ui.column(4),
-                    ui.column(4, ui.input_action_button("btn_input_form_submit", "Submit", width="100%")),
+                    ui.column(4, ui.input_action_button("btn_input_form_submit", "Submit", width="100%", disabled=self._db_table_model.isReadOnly())),
                 ),
                 title=f"Input Form - New {self._title}",
                 easy_close=True,
@@ -408,24 +408,24 @@ class SessionInputTableModel(ShinyInputTableModel):
             @reactive.effect
             @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
             def triggerInputFormSubmit():
-                with reactive.isolate():
-                    print(f"Input button value [{input.btn_input_form_submit()}]")
-                    print("Input Submit Pressed!")
-                    song_id = None if input.song_id() == '' else input.song_id()
-                    # Create single row as dataframe
-                    df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
-                                                    'session_date':[input.session_date()],
-                                                    'duration':[input.duration()],
-                                                    'l_song_id':[song_id],
-                                                    'notes':[input.notes()]})
-                    if self._df_selected_id:
-                        self._db_table_model.update(df_row_to_database)
-                    else:
-                        self._db_table_model.insert(df_row_to_database)
-                    
-                    ui.modal_remove()
-                    self.processData()
-                    summary_df.set(self.df_summary)
+                print(f"Input button value [{input.btn_input_form_submit()}]")
+                print("Input Submit Pressed!")
+                song_id = None if input.song_id() == '' else input.song_id()
+                # Create single row as dataframe
+                df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
+                                                'session_date':[input.session_date()],
+                                                'duration':[input.duration()],
+                                                'l_song_id':[song_id],
+                                                'notes':[input.notes()],
+                                                'video_url':[input.video_url()]})
+                if self._df_selected_id:
+                    self._db_table_model.update(df_row_to_database)
+                else:
+                    self._db_table_model.insert(df_row_to_database)
+                
+                ui.modal_remove()
+                self.processData()
+                summary_df.set(self.df_summary)
 
             @render.text
             def id_text():
