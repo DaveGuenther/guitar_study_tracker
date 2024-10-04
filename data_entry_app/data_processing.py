@@ -56,6 +56,12 @@ class ShinyInputTableModel(ABC):
 
         return ui_modal(self._namespace_id)
 
+    def _init_id_text(self):
+        if self._df_selected_id:
+            return "id: "+str(self._df_selected_id)
+        else:
+            return "id: [NEW RECORD]"        
+
     @abstractmethod
     def server_call(self, input, output, session, summary_df):
         pass
@@ -82,7 +88,7 @@ class ArtistInputTableModel(ShinyInputTableModel):
         Artist Modal Form UI code goes here
         """
         return ui.row(
-            ui.output_text(id="id_text"),ui.br(),
+            ui.div(self._init_id_text()),
             ui.input_text(id="name",label=f"{self._title} Name *", value=self.__init_name()).add_style('color:red;'), #REQUIRED VALUE
         ),
 
@@ -109,14 +115,7 @@ class ArtistInputTableModel(ShinyInputTableModel):
                 ui.modal_remove()
                 self.processData()
                 summary_df.set(self.df_summary)
-
-            @render.text
-            def id_text():
-                if self._df_selected_id:
-                    return "id: "+str(self._df_selected_id)
-                else:
-                    return "id: [NEW RECORD]"
-            
+           
             @reactive.effect
             @reactive.event(input.btn_input_cancel)
             def triggerInputCancel():
@@ -237,7 +236,7 @@ class SongInputTableModel(ShinyInputTableModel):
         Song Modal Form UI code goes here
         """
         return ui.row(
-            ui.output_text(id="id_text"),ui.br(),
+            ui.div(self._init_id_text()),
             ui.input_text(id="title",label=f"{self._title} Title *", value=self.__init_title()).add_style('color:red;'), # REQUIRED VALUE
             ui.input_select(id="composer",label="Composer",choices=self.__artist_lookup, selected=self.__init_composer()),
             ui.input_select(id="arranger",label="Arranger",choices=self.__artist_lookup, selected=self.__init_arranger()),
@@ -277,13 +276,6 @@ class SongInputTableModel(ShinyInputTableModel):
                 ui.modal_remove()
                 self.processData()
                 summary_df.set(self.df_summary)
-
-            @render.text
-            def id_text():
-                if self._df_selected_id:
-                    return "id: "+str(self._df_selected_id)
-                else:
-                    return "id: [NEW RECORD]"
             
             @reactive.effect
             @reactive.event(input.btn_input_cancel)
@@ -390,7 +382,7 @@ class SessionInputTableModel(ShinyInputTableModel):
         Song Modal Form UI code goes here
         """
         return ui.row(
-            ui.output_text(id="id_text"),ui.br(),
+            ui.div(self._init_id_text()),
             ui.input_date(id="session_date",label=f"Session Date *", value=self.__init_session_date()).add_style('color:red;'), #REQUIRED FIELD
             ui.input_text(id="duration",label="Duration *", value=self.__init_duration()).add_style('color:red;'), #REQUIRED FIELD
             ui.input_select(id="song_id",label="Song",choices=self.__song_lookup, selected=self.__init_song()),
@@ -429,13 +421,6 @@ class SessionInputTableModel(ShinyInputTableModel):
                 ui.modal_remove()
                 self.processData()
                 summary_df.set(self.df_summary)
-
-            @render.text
-            def id_text():
-                if self._df_selected_id:
-                    return "id: "+str(self._df_selected_id)
-                else:
-                    return "id: [NEW RECORD]"
            
             @reactive.effect
             @reactive.event(input.btn_input_cancel)

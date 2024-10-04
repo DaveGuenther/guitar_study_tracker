@@ -82,7 +82,7 @@ class ShinyFormTemplate:
                 updateButtonVisible.set(False)
                 df_selected_row.set(pd.DataFrame())
                 df_selected_id.set(None)        
-                #summary_table.update_cell_selection(selection='none')
+
 
             ## New Button Click Event
             @reactive.effect
