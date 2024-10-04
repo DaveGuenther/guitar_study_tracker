@@ -324,8 +324,8 @@ class SessionInputTableModel(ShinyInputTableModel):
         df_resolved_sessions = df_raw_session.merge(df_resolved_song,how='left', left_on='l_song_id', right_on='id').drop(['l_song_id','id_y'],axis=1).rename({'id_x':'id'},axis=1)
         df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
         df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','video_url':'Video URL'},axis=1)
-        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Notes', 'Video URL']]
-
+        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
+        
         # Establish song lookup
         self.__song_lookup = {'':''}
         self.__song_lookup.update({value:label for value,label in zip(df_raw_song['id'],df_raw_song['title'])})

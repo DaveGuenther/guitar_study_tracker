@@ -91,6 +91,8 @@ def server(input, output, session):
                 read_only_acct=True
         
 
+
+
         # connect to database
         artist_model.connect(user_name, pw, read_only_acct)
         song_model.connect(user_name, pw, read_only_acct)
