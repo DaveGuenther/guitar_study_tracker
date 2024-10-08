@@ -22,14 +22,24 @@ tbl_artist = Table(
     schema=schema,
 )
 
+tbl_style = Table(
+    'style',
+    metadata,
+    Column('id', Integer, nullable=False),
+    Column('style', Text, nullable=False),
+    schema=schema,
+)
+
 tbl_song = Table(
     'song',
     metadata,
     Column('id', Integer, nullable=False,),
     Column('start_date', Date, nullable=True),
-    Column('off_book_date', Date, nullable=True ),
+    Column('off_book_date', Date, nullable=True),
+    Column('at_tempo_date', Date, nullable=True),
     Column('play_ready_date', Date, nullable=True),
     Column('title', Text, nullable=False),
+    Column('style_id', Text, nullable=True), # foreign key to style.id
     Column('composer', Integer, nullable=True), # foreign key to artist.id
     Column('arranger', Integer, nullable=True), # foreign key to artist.id (writers and arrangers can be the same person)
     schema=schema,

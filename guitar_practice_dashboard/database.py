@@ -16,6 +16,9 @@ class DatabaseSession:
     This class manages the connection with PostgreSQL and contains the active database session and manages data transmission with the database.
     """
     __session=None
+    __host=None
+    __port=None
+    __dbname=None
 
     def __init__(self, host:str, port:str, dbname:str):
         self.__host = host
