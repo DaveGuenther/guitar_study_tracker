@@ -80,7 +80,6 @@ def server(input, output, session):
     @reactive.calc
     def heatMapDataTranform():
         #prep for heatmap
-        df_sessions.to_csv('sessions.csv')
         df_grouped = df_sessions[['Weekday_abbr','Week','Year', 'Duration']].groupby(['Weekday_abbr','Year','Week'], as_index=False).sum()
         df_grouped = df_grouped.sort_values(['Year','Week'])
         df_z = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','Week'])
@@ -88,8 +87,7 @@ def server(input, output, session):
         df_z = df_z.fillna('')
         z=[list(df_z.loc[wk_day,]) for wk_day in df_z.index]        
         x = list(df_z.T.index.levels[2].astype(int))
-        y = list(df_z.index)  
-        df_z.to_csv("out.csv")   
+        y = list(df_z.index)    
         return x, y, z
 
 
@@ -110,7 +108,13 @@ def server(input, output, session):
                 colorbar= dict(
                     tick0= 0,
                     tickmode= 'array',
-                    tickvals= ["<30",'30','40','50','60',">60"],
+                    tickvals= [25,30,40,50,60,65],
+                    ticktext=["<30","30","40","50","60",">60"],
+                    tickwidth=40,
+                    xpad=10,
+                    thickness=40,
+
+
     )
             )   
         )
