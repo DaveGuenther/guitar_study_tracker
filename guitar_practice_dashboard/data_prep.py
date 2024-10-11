@@ -1,6 +1,24 @@
 import pandas as pd
+import datetime
+import calendar
 
 def processData(session_data, song_data, artist_data, style_data):
+
+    def get_week_number(date):
+        # Set the first day of the week to Sunday
+        calendar.setfirstweekday(calendar.SUNDAY)
+
+        # Get the ISO week number (weeks start on Monday)
+        iso_week_number = date.isocalendar().week
+
+        # Adjust if the first week of the year starts on Sunday
+        if date.weekday() == 6 and iso_week_number == 1:
+            return 1
+        elif date.weekday() == 6:
+            return iso_week_number + 1
+        else:
+            return iso_week_number
+
     print("Hello World")
     df_raw_session = session_data.df_raw
     df_raw_song = song_data.df_raw
@@ -31,5 +49,9 @@ def processData(session_data, song_data, artist_data, style_data):
          'Weekday':['Monday','Tuesday','Wedensday','Thursday','Friday','Saturday','Sunday'],
          'Weekday_abbr':['Mon','Tue','Wed','Thu','Fri','Sat','Sun']})
     df_summary = df_summary.merge(df_weekdays, how='left', on='weekday_number')
-
+    df_summary['Week'] = df_summary.apply(lambda row: get_week_number(row['session_date']), axis=1) # Week number adjusted to start on Sunday, not Monday
+    
+    df_summary['week_start'] = pd.to_datetime(df_summary['Week'].astype(str)+str('2024')+'Sun', format='%W%Y%a')
+    df_summary['week_end'] = df_summary['week_start']+ pd.Timedelta(days=6)
+    df_summary['week_str'] = df_summary.apply(lambda row: str(row['week_start'].strftime('%b %d'))+" - "+str(row['week_end'].strftime('%b %d')),axis=1)
     return df_summary

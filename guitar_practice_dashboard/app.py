@@ -54,7 +54,9 @@ app_ui = ui.page_fluid(
                 # Execute ui code for shiny modules
                 ui.nav_panel("Practice Sessions", 
                     "Practice Sessions",
-                    output_widget(id='waffle_chart'),
+                    ui.div(
+                        output_widget(id='waffle_chart').add_style('horizontal-align:right;'),
+                    ),
                 ), 
                 ui.nav_panel("Career Repertoire",
                     "Career Repretoire",
@@ -80,25 +82,31 @@ def server(input, output, session):
     @reactive.calc
     def heatMapDataTranform():
         #prep for heatmap
-        df_grouped = df_sessions[['Weekday_abbr','Week','Year', 'Duration']].groupby(['Weekday_abbr','Year','Week'], as_index=False).sum()
-        df_grouped = df_grouped.sort_values(['Year','Week'])
-        df_z = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','Week'])
+        df_grouped = df_sessions[['Weekday_abbr','session_date','week_str','Year', 'Duration']].groupby(['Weekday_abbr','Year','session_date','week_str'], as_index=False).sum()
+        df_grouped = df_grouped.sort_values(['Year','session_date']).drop('session_date',axis=1)
+        df_z = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','week_str'])
         df_z = df_z.loc[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],]
         df_z = df_z.fillna('')
-        z=[list(df_z.loc[wk_day,]) for wk_day in df_z.index]        
-        x = list(df_z.T.index.levels[2].astype(int))
-        y = list(df_z.index)    
-        return x, y, z
+        ret_dict = {
+            'Week Names':list(df_z.T.index.get_level_values(2)),
+            'Weekday Names':list(df_z.index),
+            'Daily Practice Duration':[list(df_z.loc[wk_day,]) for wk_day in df_z.index],
+        }
+        
+        return ret_dict
 
 
     @render_widget
     def waffle_chart():
-        x, y, z = heatMapDataTranform()
+        ret_dict = heatMapDataTranform()
+        # add subplot here for year as stacked bar
         fig = go.Figure(
             data=go.Heatmap(
-                z=z,
-                x=x,
-                y=y,
+                x=ret_dict['Week Names'],
+                y=ret_dict['Weekday Names'],
+                z=ret_dict['Daily Practice Duration'],                
+                xgap=5,
+                ygap=5,
                 hoverongaps=False,
                 zmin=20,
                 zmax=70,
@@ -112,11 +120,36 @@ def server(input, output, session):
                     ticktext=["<30","30","40","50","60",">60"],
                     tickwidth=40,
                     xpad=10,
-                    thickness=40,
-
-
-    )
+                    thickness=25,
+                    
+                )
             )   
+        )
+        fig.update_layout(
+            margin=dict(t=100, b=0, l=00, r=0),
+            xaxis_side='top',
+            xaxis_dtick=1,
+
+            
+           
+            yaxis_dtick=1,
+            autosize=False,
+            width=300,
+            height=300,
+            plot_bgcolor="rgba(.5,.5,.5,.2)",
+            
+            
+        )
+        fig.update_xaxes(
+            gridcolor="rgba(.5,.5,.5,.1)",
+            tickangle=315,
+            anchor='free',
+            position=1,
+
+        )
+        fig.update_yaxes(
+            gridcolor="rgba(.5,.5,.5,.1)",
+
         )
         figWidget = go.FigureWidget(fig)
         return figWidget
