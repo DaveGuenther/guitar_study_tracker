@@ -369,6 +369,7 @@ class SongInputTableModel(ShinyInputTableModel):
             @reactive.effect
             @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
             def triggerInputFormSubmit():
+                #print("Inside Submit")
                 composer_id = None if input.composer() == '' else input.composer()
                 arranger_id = None if input.arranger() == '' else input.arranger()
                 style_id = None if input.style() == '' else input.style()
@@ -382,6 +383,7 @@ class SongInputTableModel(ShinyInputTableModel):
                                                    'off_book_date':[input.off_book_date()],
                                                    'at_tempo_date':[input.at_tempo_date()],
                                                    'play_ready_date':[input.play_ready_date()]})
+                #print(df_row_to_database.to_string())
                 if self._df_selected_id:
                     self._db_table_model.update(df_row_to_database)
                 else:
@@ -394,6 +396,7 @@ class SongInputTableModel(ShinyInputTableModel):
             @reactive.effect
             @reactive.event(input.btn_input_cancel)
             def triggerInputCancel():
+                #print("Cancelled")
                 ui.modal_remove()
 
             return self.df_summary.copy
