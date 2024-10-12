@@ -50,8 +50,9 @@ def processData(session_data, song_data, artist_data, style_data):
          'Weekday_abbr':['Mon','Tue','Wed','Thu','Fri','Sat','Sun']})
     df_summary = df_summary.merge(df_weekdays, how='left', on='weekday_number')
     df_summary['Week'] = df_summary.apply(lambda row: get_week_number(row['session_date']), axis=1) # Week number adjusted to start on Sunday, not Monday
-    
     df_summary['week_start'] = pd.to_datetime(df_summary['Week'].astype(str)+str('2024')+'Sun', format='%W%Y%a')
+    df_summary['week_start_day_num'] = df_summary['week_start'].dt.day
+    df_summary['month_year'] = df_summary.apply(lambda row: str(row['week_start'].strftime('%b'))+" '"+str(row['week_start'].strftime('%y')),axis=1)
     df_summary['week_end'] = df_summary['week_start']+ pd.Timedelta(days=6)
     df_summary['week_str'] = df_summary.apply(lambda row: str(row['week_start'].strftime('%b %d'))+" - "+str(row['week_end'].strftime('%b %d')),axis=1)
     return df_summary

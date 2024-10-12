@@ -1,11 +1,13 @@
 # Core
 import pandas as pd
+import numpy as np
 import os
 from dotenv import load_dotenv
 import logging
 
 # Web/Visual frameworks
 from shiny import App, ui, render, reactive, types, req, module
+from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from shinywidgets import output_widget, render_widget, render_plotly
 
@@ -81,16 +83,45 @@ def server(input, output, session):
 
     @reactive.calc
     def heatMapDataTranform():
+        pd.set_option('future.no_silent_downcasting', True) # needed for fillna() commands below
+        
         #prep for heatmap
-        df_grouped = df_sessions[['Weekday_abbr','session_date','week_str','Year', 'Duration']].groupby(['Weekday_abbr','Year','session_date','week_str'], as_index=False).sum()
-        df_grouped = df_grouped.sort_values(['Year','session_date']).drop('session_date',axis=1)
-        df_z = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','week_str'])
-        df_z = df_z.loc[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],]
-        df_z = df_z.fillna('')
+        df_grouped = df_sessions[['Weekday_abbr','session_date','week_start_day_num','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_year','session_date','week_start_day_num'], as_index=False).sum()
+        df_grouped = df_grouped.sort_values(['Year','session_date'])#.drop('session_date',axis=1)
+        df_pivoted = df_grouped.pivot(index=['Weekday_abbr'], columns=['month_year','week_start_day_num']) # produces a nested axis grid with a "df" for every column passed in (Duration, session_date, Year, etc).
+        
+        #create weekdays by week number grid to build a githubt style activity waffle chart
+        df_durations = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='Duration'].T  # isolate the Duration grid
+        df_durations = df_durations.loc[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],]
+        df_durations = df_durations.fillna('')
+
+        #create weekdays by week number grid to build a githubt style activity waffle chart
+        df_session_dates = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='session_date'].T  # isolate the session_date grid
+        df_session_dates = df_session_dates.loc[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],]
+        df_session_dates = df_session_dates.fillna('')
+
+        def getDateString(cell):
+            if cell:
+                return cell.strftime('%a %m-%d-%Y')
+            return ''
+
+        #create weekdays by week number grid to build a githubt style activity waffle chart
+        df_str_session_dates = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='session_date'].T  # isolate the session_date grid
+        df_str_session_dates = df_session_dates.loc[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],]
+        df_str_session_dates = df_session_dates.fillna('')
+        df_str_session_dates = df_str_session_dates.map(getDateString) # nice formatted string for the Hover of the heatmap
+
+        month_year_names = list(df_durations.T.index.get_level_values(1)) # this list contains the Month/Year (e.g. "Oct '24") of the sunday of each week (each week is a column) in the grid in ascending order
+        week_start_day_nums = list(df_durations.T.index.get_level_values(2)) # this list contains the day of the month that starts the week (each week is a column) in the grid in ascending order
+
         ret_dict = {
-            'Week Names':list(df_z.T.index.get_level_values(2)),
-            'Weekday Names':list(df_z.index),
-            'Daily Practice Duration':[list(df_z.loc[wk_day,]) for wk_day in df_z.index],
+            'Week Names':[month_year_names,week_start_day_nums], # establishes a 2-level axis grouping the like month/years together
+            'Weekday Names':list(df_durations.index),
+            'Daily Practice Durations Grid':[list(df_durations.loc[wk_day,]) for wk_day in df_durations.index],
+            'customdata':[
+                [list(df_session_dates.loc[wk_day,]) for wk_day in df_session_dates.index], # datetimes
+                [list(df_str_session_dates.loc[wk_day,]) for wk_day in df_str_session_dates.index], # Dates as formatted strings
+            ],
         }
         
         return ret_dict
@@ -99,12 +130,17 @@ def server(input, output, session):
     @render_widget
     def waffle_chart():
         ret_dict = heatMapDataTranform()
+        num_columns = len(ret_dict['Week Names'])
+        
         # add subplot here for year as stacked bar
+
         fig = go.Figure(
-            data=go.Heatmap(
+            go.Heatmap(
                 x=ret_dict['Week Names'],
                 y=ret_dict['Weekday Names'],
-                z=ret_dict['Daily Practice Duration'],                
+                z=ret_dict['Daily Practice Durations Grid'],     
+                customdata=np.stack((ret_dict['customdata'][0], ret_dict['customdata'][1]), axis=-1),
+                hovertemplate='Date: %{customdata[1]}<br>Duration (Minutes): %{z}',           
                 xgap=5,
                 ygap=5,
                 hoverongaps=False,
@@ -125,16 +161,17 @@ def server(input, output, session):
                 )
             )   
         )
+
         fig.update_layout(
             margin=dict(t=100, b=0, l=00, r=0),
-            xaxis_side='top',
+            xaxis_side='bottom',
             xaxis_dtick=1,
 
             
            
             yaxis_dtick=1,
             autosize=False,
-            width=300,
+            width=150+(50*num_columns),
             height=300,
             plot_bgcolor="rgba(.5,.5,.5,.2)",
             
@@ -142,9 +179,9 @@ def server(input, output, session):
         )
         fig.update_xaxes(
             gridcolor="rgba(.5,.5,.5,.1)",
-            tickangle=315,
+            #tickangle=315,
             anchor='free',
-            position=1,
+            position=0,
 
         )
         fig.update_yaxes(
