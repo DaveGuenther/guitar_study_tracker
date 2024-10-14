@@ -4,6 +4,7 @@
 data_entry_app/variables.env
 data_entry_app/manifest.json
 guitar_practive_dashboard/manifest.json
+guitar_practice_dashboard/data.csv
 guitar_practice_dashboard/variables.env
 **rsconnect-python/
 docs/Guitar_Study_Tracker_Input.dia~
