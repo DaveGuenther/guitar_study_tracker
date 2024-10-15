@@ -1,0 +1,88 @@
+
+/*
+
+Dark Brown: #36241B
+Light Brown: #B2765D
+Warm Orange: #D68A63
+Secondary Colors
+Darker Brown: #291E15
+Lighter Brown: #D9B7A1
+Gold: #B8A372
+Additional Colors (Optional)
+Black: #000000
+White: #FFFFFF
+
+
+Dark Brown: #40291D
+Bronze: #B2913C
+Burgundy: #800020
+Black: #000000
+
+Deep brown: #40291D
+Golden brown: #B2913C
+Olive green: #666666
+Cream #FFF8DC
+Dark gray: #800000
+Burgundy: #800020
+Light green: #008000
+
+*/
+#all_colors{ /* for preview in VS Code */
+    /*Primary Colors */
+    color:#36241B;
+    color:#B2765D;
+    color:#D68A63;
+
+    /* Secondary Colors */
+    color:#291E15;
+    color:#D9B7A1;
+    color:#B8A372;
+
+    color:#40291D;
+    color:#B2913C;
+    color:#800020;
+    color:#40291D;
+    color:#B2913C;
+    color:#666666;
+    color:#FFF8DC; /*Cream*/
+    color:#404040;
+    color:#008000;
+
+    /* Alternate Palette */
+    color:#bf7b15;
+    color:#6f340d;
+    color:#160d08;
+    color:#45220d;
+    color:#dbcaa4;
+    color:#8a8d73;
+    color:#504e3e;
+    color:#302e26;
+    color:#454344;
+    color:#848384;    
+    color:#2980B9; 
+    color:#03A9F4;          
+
+}
+
+.tab-content>.active{
+    padding-right:12px; /*calc(var(--bs-gutter-x)* .5);*/
+    padding-left:12px;
+}
+
+.container-fluid{
+    padding-right:0px;
+    padding-left:0px;
+}
+
+.navbar.navbar-default{
+    background-color: #D9B7A1 !important;
+}
+
+body {
+    font-family: garamond;
+    background-color: black;
+}
+
+h3 {
+    color: #FFF8DC;
+}

@@ -1,4 +1,5 @@
 # Core
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import os
@@ -52,7 +53,7 @@ df_sessions = data_prep.processData(session_model, song_model, artist_model, sty
 
 
 app_ui = ui.page_fluid(
-
+        ui.tags.link(href='styles.css', rel="stylesheet"),
 
         ui.div(
             ui.page_navbar(
@@ -60,8 +61,10 @@ app_ui = ui.page_fluid(
                 ui.nav_panel("Practice Sessions", 
                     ui.h3("Total Practice Time (Minutes) per Day"),
                     ui.div(
-                        output_widget(id='waffle_chart').add_style('width:1635px; overflow-x: scroll;'),
-                    ),
+                        output_widget(id='waffle_chart'),
+                        ui.img(src='guitar-stock-transparent-min.png', width="600px"),
+                        id='guitar-neck-container',
+                    ).add_style('width:1850px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                 ), 
                 ui.nav_panel("Career Repertoire",
                     "Career Repretoire",
@@ -70,7 +73,9 @@ app_ui = ui.page_fluid(
                         filter_shelf.filter_shelf(df_sessions),
                         width=300,
                     ),
-                ),      
+                ), 
+            id='main_nav_bar',     
+            title="Guitar Study Tracker Dashboard",
             ),
         ),
         title="Guitar Study Tracker Dashboard"
@@ -134,7 +139,7 @@ def server(input, output, session):
         years = list(df_durations.T.index.get_level_values(1))
         month_week_starts = list(df_durations.T.index.get_level_values(3))
         #month_year_names = list(df_durations.T.index.get_level_values(1)) # this list contains the Month/Year (e.g. "Oct '24") of the sunday of each week (each week is a column) in the grid in ascending order
-        #week_start_day_nums = list(df_durations.T.index.get_level_values(2)) # this list contains the day of the month that starts the week (each week is a column) in the grid in ascending order
+        week_start_day_nums = list(df_durations.T.index.get_level_values(2)) # this list contains the day of the month that starts the week (each week is a column) in the grid in ascending order
 
         ret_dict = {
             'Week Names':[years,month_week_starts],#,week_start_day_nums], # establishes a 2-level axis grouping the like month/years together
@@ -165,53 +170,55 @@ def server(input, output, session):
                 customdata=np.stack((ret_dict['customdata'][0], ret_dict['customdata'][1], ret_dict['customdata'][2]), axis=-1),
                 text=ret_dict['customdata'][2],
                 texttemplate="%{text}",
+                textfont={'size':14},
                 hovertemplate='Date: %{customdata[1]}<br>Duration (Minutes): %{z}',           
                 xgap=5,
                 ygap=5,
                 hoverongaps=False,
-                zmin=20,
-                zmax=70,
-                colorscale=[[0.00, "red"],   [0.2, "red"],
-                            [0.2, "orange"], [0.8, "blue"],
-                            [0.8, "darkblue"],  [1.00, "darkblue"]],
+                zmin=0,
+                zmax=60,
+                colorscale=[[0.0, "#40291D"], [1.0, "#03A9F4"]],
                 colorbar= dict(
-                    tick0= 0,
+                    title="Minutes",
                     tickmode= 'array',
-                    tickvals= [25,30,40,50,60,65],
-                    ticktext=["<30","30","40","50","60",">60"],
-                    tickwidth=40,
-                    xpad=10,
-                    thickness=25,
-                    
+                    tickvals= [0,30,60],
+                    ticktext=["0","30","60"],
+                    thickness=12,
+                    x=-0.085,
                 ),
                 
             ),
         )
 
         fig.update_layout(
-            margin=dict(t=30, b=0, l=00, r=0),
+            margin=dict(t=100, b=0, l=0, r=0),
             xaxis_side='bottom',
             xaxis_dtick=1, 
             
-
+            # Main plot styling
+            font_family='garamond',
+            font_color='#B2913C',
+            paper_bgcolor='#000000',
             
            
             yaxis_dtick=1,
             autosize=False,
-            width=1635,#75+(30*num_columns),#1635 if 75+(30*num_columns)>1635 else 75+(30*num_columns),
-            height=250,
-            plot_bgcolor="rgba(.5,.5,.5,.2)",
-            
+            width=1150,#75+(30*num_columns),#1635 if 75+(30*num_columns)>1635 else 75+(30*num_columns),
+            height=320,
+            plot_bgcolor="#40291D",
+
     
         )
         fig.layout.xaxis.fixedrange = True
         fig.layout.yaxis.fixedrange = True
+
         fig.update_xaxes(
-            title="Week of",
-            gridcolor="rgba(.5,.5,.5,.1)",
+            #title="Week of",
+            gridcolor="#6f340d",
             tickangle=285,
             anchor='free',
             position=0,
+
 
         )
         fig.update_yaxes(
@@ -221,7 +228,5 @@ def server(input, output, session):
         figWidget = go.FigureWidget(fig)
         return figWidget
 
-
-
-
-app = App(app_ui, server, debug=False)
+app_dir = Path(__file__).parent
+app = App(app_ui, server, debug=False, static_assets=app_dir / "www")
