@@ -59,10 +59,10 @@ app_ui = ui.page_fluid(
             ui.page_navbar(
                 # Execute ui code for shiny modules
                 ui.nav_panel("Practice Sessions", 
-                    ui.h3("Total Practice Time (Minutes) per Day"),
+                    #ui.h3("Total Practice Time (Minutes) per Day"),
                     ui.div(
                         output_widget(id='waffle_chart'),
-                        ui.img(src='guitar-stock-transparent-min.png', width="600px"),
+                        ui.img(src='guitar-head-stock.png', width="485px", height="252"),
                         id='guitar-neck-container',
                     ).add_style('width:1850px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                 ), 
@@ -168,6 +168,7 @@ def server(input, output, session):
                 y=ret_dict['Weekday Names'],
                 z=ret_dict['Daily Practice Durations Grid'],     
                 customdata=np.stack((ret_dict['customdata'][0], ret_dict['customdata'][1], ret_dict['customdata'][2]), axis=-1),
+                
                 text=ret_dict['customdata'][2],
                 texttemplate="%{text}",
                 textfont={'size':14},
@@ -191,7 +192,9 @@ def server(input, output, session):
         )
 
         fig.update_layout(
-            margin=dict(t=100, b=0, l=0, r=0),
+            margin=dict(t=44, b=0, l=0, r=0),
+            
+            title=dict(text="Total Practice Tile (Minutes) per Day",font=dict(size=30),yanchor='bottom', yref='paper'),
             xaxis_side='bottom',
             xaxis_dtick=1, 
             
@@ -203,8 +206,8 @@ def server(input, output, session):
            
             yaxis_dtick=1,
             autosize=False,
-            width=1150,#75+(30*num_columns),#1635 if 75+(30*num_columns)>1635 else 75+(30*num_columns),
-            height=320,
+            width=1250,#75+(30*num_columns),#1635 if 75+(30*num_columns)>1635 else 75+(30*num_columns),
+            height=277,
             plot_bgcolor="#40291D",
 
     
