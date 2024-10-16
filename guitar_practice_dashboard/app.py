@@ -47,8 +47,8 @@ artist_model.connect(user_name, pw, True)
 style_model.connect(user_name, pw, True)
 song_model.connect(user_name, pw, True)
 session_model.connect(user_name, pw, True)
-session_model.df_raw= pd.read_csv('data.csv') # remove when done testing
-df_sessions = data_prep.processData(session_model, song_model, artist_model, style_model)
+#session_model.df_raw= pd.read_csv('data.csv') # remove when done testing
+df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
 
 
 
@@ -91,11 +91,11 @@ def server(input, output, session):
     df_session_data = reactive.value(df_sessions)
 
     @reactive.calc
-    def df_sessions_stage_1():
+    def df_365_stage_1():
         '''
         This returns the df_sessions dataframe with only filter shelf filters applied (Stage 1).
         '''
-        df_filtered = df_sessions
+        df_filtered = df_365
         return df_filtered
 
     @reactive.calc
@@ -103,23 +103,23 @@ def server(input, output, session):
         pd.set_option('future.no_silent_downcasting', True) # needed for fillna() commands below
         today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
         #prep for heatmap
-        df_grouped = df_sessions_stage_1()[['Weekday_abbr','session_date','month_abbr', 'has_url','week_start_day_num','month_week_start','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_abbr','month_year','session_date','has_url','week_start_day_num','month_week_start'], as_index=False).sum()
-        df_grouped = df_grouped[df_grouped['session_date']>=today-pd.DateOffset(days=365)]
+        
+        df_grouped = df_365_stage_1()[['Weekday_abbr','session_date','month_abbr', 'has_url','week_start_day_num','month_week_start','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_abbr','month_year','session_date','has_url','week_start_day_num','month_week_start'], as_index=False).sum()
+        
         df_grouped = df_grouped.sort_values(['session_date'])
-        #df_pivoted = df_grouped.pivot(index=['Weekday_abbr'], columns=['month_year','week_start_day_num']) # produces a nested axis grid with a "df" for every column passed in (Duration, session_date, Year, etc).
         df_pivoted = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','month_year','month_week_start']) # produces a nested axis grid with a "df" for every column passed in (Duration, session_date, Year, etc).
 
-        #create weekdays by week number grid to build a githubt style activity waffle chart
+        #Establish Durations (minutes/day) for github style activity waffle chart
         df_durations = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='Duration'].T  # isolate the Duration grid
         df_durations = df_durations.loc[['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],]
         df_durations = df_durations.fillna('')
 
-        #create weekdays by week number grid to build a githubt style activity waffle chart
+        #Establish session dates for github style activity waffle chart
         df_session_dates = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='session_date'].T  # isolate the session_date grid
         df_session_dates = df_session_dates.loc[['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],]
         df_session_dates = df_session_dates.fillna('')
 
-        #create weekdays by week number grid to build a githubt style activity waffle chart
+        #establish has_url column that we'll use to print Asterisks for githube style waffle chart
         df_has_urls = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='has_url'].T  # isolate the session_date grid
         df_has_urls = df_has_urls.loc[['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],]
         df_has_urls = df_has_urls.fillna('')
@@ -130,7 +130,7 @@ def server(input, output, session):
                 return cell.strftime('%a %m-%d-%Y')
             return ''
 
-        #create weekdays by week number grid to build a githubt style activity waffle chart
+        #Establish Strings of dates for tooltips for github style activity waffle chart
         df_str_session_dates = df_pivoted.T[df_pivoted.T.index.get_level_values(0)=='session_date'].T  # isolate the session_date grid
         df_str_session_dates = df_session_dates.loc[['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],]
         df_str_session_dates = df_session_dates.fillna('')
@@ -138,11 +138,9 @@ def server(input, output, session):
 
         years = list(df_durations.T.index.get_level_values(1))
         month_week_starts = list(df_durations.T.index.get_level_values(3))
-        #month_year_names = list(df_durations.T.index.get_level_values(1)) # this list contains the Month/Year (e.g. "Oct '24") of the sunday of each week (each week is a column) in the grid in ascending order
-        week_start_day_nums = list(df_durations.T.index.get_level_values(2)) # this list contains the day of the month that starts the week (each week is a column) in the grid in ascending order
-
+        
         ret_dict = {
-            'Week Names':[years,month_week_starts],#,week_start_day_nums], # establishes a 2-level axis grouping the like month/years together
+            'Week Names':[years,month_week_starts], # establishes a 2-level axis grouping the like years together
             'Weekday Names':list(df_durations.index),
             'Daily Practice Durations Grid':[list(df_durations.loc[wk_day,]) for wk_day in df_durations.index],
             'customdata':[

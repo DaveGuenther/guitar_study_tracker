@@ -20,7 +20,8 @@ def processData(session_data, song_data, artist_data, style_data):
             return iso_week_number + 1
         else:
             return iso_week_number
-    
+    today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
+
     df_raw_session = session_data.df_raw
     df_raw_song = song_data.df_raw
     df_raw_artist = artist_data.df_raw
@@ -37,6 +38,12 @@ def processData(session_data, song_data, artist_data, style_data):
     df_resolved_song['Play Ready Date'] = pd.to_datetime(df_resolved_song['play_ready_date']).dt.strftime("%m/%d/%Y")
     df_resolved_song = df_resolved_song.rename({'title':'Title'},axis=1)
     df_resolved_sessions = df_raw_session.merge(df_resolved_song,how='left', left_on='l_song_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+    df_zeros = pd.DataFrame({'Date':pd.date_range(today-pd.DateOffset(days=365),today),'Dur':np.zeros(len(pd.date_range(today-pd.DateOffset(days=365),today)))})
+    df_resolved_sessions['session_date'] = pd.to_datetime(df_resolved_sessions['session_date'])
+    df_resolved_sessions = df_zeros.merge(df_resolved_sessions,how='left',left_on='Date',right_on='session_date')
+    df_resolved_sessions['duration'] = df_resolved_sessions.apply(lambda row: 0 if pd.isna(row['session_date']) else row['duration'], axis=1)
+    df_resolved_sessions['session_date']=df_resolved_sessions['Date']
+    df_resolved_sessions.drop(['Date','Dur'],axis=1)
     df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
     df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','video_url':'Video URL'},axis=1)
     df_summary = df_resolved_sessions[['id', 'Session Date','session_date', 'Duration', 'Song','Style','l_song_id','Composer','Arranger','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
@@ -62,5 +69,6 @@ def processData(session_data, song_data, artist_data, style_data):
     df_summary['Duration'] = df_summary['Duration'].fillna(0)
     df_grouped_by_date = df_summary.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
     df_summary['has_url'] = df_grouped_by_date['Video URL'].transform(lambda group: '*' if any(group.values) else'')
-    #df_summary['has_url'] = df_summary['Video URL'].apply(lambda row: '*' if row else '')
-    return df_summary
+    df_365 = df_summary[df_summary['session_date']>=today-pd.DateOffset(days=365)]
+    df_summary=df_summary[df_summary['id'].notna()]
+    return df_summary, df_365
