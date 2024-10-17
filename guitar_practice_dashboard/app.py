@@ -54,17 +54,35 @@ df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_mo
 
 app_ui = ui.page_fluid(
         ui.tags.link(href='styles.css', rel="stylesheet"),
-
         ui.div(
             ui.page_navbar(
                 # Execute ui code for shiny modules
                 ui.nav_panel("Practice Sessions", 
-                    #ui.h3("Total Practice Time (Minutes) per Day"),
-                    ui.div(
-                        output_widget(id='waffle_chart'),
-                        ui.img(src='guitar-head-stock.png', width="485px", height="252"),
-                        id='guitar-neck-container',
-                    ).add_style('width:1850px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                    ui.card(
+                        ui.div(
+                            output_widget(id='waffle_chart'),
+                            ui.img(src='guitar-head-stock.png', width="485px", height="252"),
+                            id='guitar-neck-container',
+                        ).add_style('width:1850px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                        class_="dashboard-card",
+                    ),
+
+                    ui.row(
+                        ui.column(6,
+                            ui.card(
+                                ui.h3("Time Spent Practicing Songs (Past Year)"),
+                                
+                                class_="dashboard-card",
+                            ),
+                        ),
+                        ui.column(6,
+                            ui.card(
+                                ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
+                                ui.output_data_frame(id="sessionNotesTransform").add_class('dashboard-table'),
+                                class_="dashboard-card",
+                            ),
+                        ),
+                    )
                 ), 
                 ui.nav_panel("Career Repertoire",
                     "Career Repretoire",
@@ -72,6 +90,39 @@ app_ui = ui.page_fluid(
                         ui.h4("Filters"),
                         filter_shelf.filter_shelf(df_sessions),
                         width=300,
+                    ),
+                    ui.row(
+                        ui.column(3,
+                            ui.card(
+                                ui.h4("Avg. Practice Time/Day"),
+
+                            ),
+                        ),
+                        ui.column(2,
+                            ui.card(
+                                ui.h4("Longest Practice Streak"),
+
+                            ),                        
+
+                        ),
+                        ui.column(2,
+                            ui.card(
+                                ui.h4("Longest Session"),
+
+                            ),
+                        ),
+                        ui.column(3,
+                            ui.card(
+                                ui.h4("Total Career Practice Time"),
+
+                            ),
+                        ),
+                        ui.column(2,
+                            ui.card(
+                                ui.h4("Year:"),
+
+                            ),
+                        ),                                                                                                
                     ),
                 ), 
             id='main_nav_bar',     
@@ -97,6 +148,17 @@ def server(input, output, session):
         '''
         df_filtered = df_365
         return df_filtered
+
+    @render.data_frame
+    def sessionNotesTransform():
+        today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
+        df_session_notes = df_sessions[df_sessions['session_date']>=today-pd.DateOffset(days=7)]
+        df_session_notes = df_session_notes.sort_values('session_date')
+        df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
+        df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
+        df_session_notes = df_session_notes.sort_values(['index','session_date'])
+        df_out = df_session_notes[['Song','Session Date','Notes','Duration']]
+        return render.DataTable(df_out, width="100%", styles=[{'class':'dashboard-table'}])
 
     @reactive.calc
     def heatMapDataTranform():
@@ -192,14 +254,14 @@ def server(input, output, session):
         fig.update_layout(
             margin=dict(t=44, b=0, l=0, r=0),
             
-            title=dict(text="Total Practice Tile (Minutes) per Day",font=dict(size=30),yanchor='bottom', yref='paper'),
+            title=dict(text="Daily Practice Time (Past Year)",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'),
             xaxis_side='bottom',
             xaxis_dtick=1, 
             
             # Main plot styling
             font_family='garamond',
-            font_color='#B2913C',
-            paper_bgcolor='#000000',
+            font_color='#Ff9b15',
+            paper_bgcolor='rgba(0, 0, 0, 0)',
             
            
             yaxis_dtick=1,

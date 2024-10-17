@@ -49,11 +49,13 @@ Light green: #008000
     color:#008000;
 
     /* Alternate Palette */
+    color:#Ff7b15;
+    color:#Ff9b15;
     color:#bf7b15;
     color:#6f340d;
     color:#160d08;
     color:#45220d;
-    color:#dbcaa4;
+    color:#c0aa7a;
     color:#8a8d73;
     color:#504e3e;
     color:#302e26;
@@ -62,6 +64,20 @@ Light green: #008000
     color:#2980B9; 
     color:#03A9F4;          
 
+}
+
+thead, th{
+    background-color: #160d08 !important;
+    border: 0px !important;
+    color: #dbcaa4 !important;
+}
+
+.dashboard-table{
+    background-color: #dbcaa4 !important;
+}
+
+.dashboard-card{
+    background-color: #160d08 !important;
 }
 
 .tab-content>.active{
