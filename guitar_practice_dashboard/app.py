@@ -1,5 +1,6 @@
 # Core
 from pathlib import Path
+import math
 import pandas as pd
 import numpy as np
 import os
@@ -71,17 +72,19 @@ app_ui = ui.page_fluid(
                         ui.column(6,
                             ui.card(
                                 ui.h3("Time Spent Practicing Songs (Past Year)"),
-                                
+                                output_widget(id='last_year_bar_chart'),
                                 class_="dashboard-card",
                             ),
+                            ui.h6("Dave Guenther, 2024"),
                         ),
                         ui.column(6,
                             ui.card(
                                 ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
-                                output_widget(id='last_week_bar_chart'),
+                                output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
                                 ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
                                 class_="dashboard-card",
                             ),
+                            
                         ),
                     )
                 ), 
@@ -164,7 +167,7 @@ def server(input, output, session):
     @render.data_frame
     def sessionNotesTable():
         df_out = sessionNotesTransform()
-        return render.DataTable(df_out, width="100%", styles=[{'class':'dashboard-table'}])
+        return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
     @reactive.calc
     def heatMapDataTranform():
@@ -220,6 +223,67 @@ def server(input, output, session):
         
         return ret_dict
 
+    @reactive.calc
+    def lastYearSongTransform():
+        df_365 = df_365_stage_1()
+        df_365 = df_365[df_365['Song'].notna()]
+        df_365 = df_365.groupby(['Song','Composer','Arranger'], as_index=False)['Duration'].sum()
+        df_365['Minutes'] = df_365['Duration']%60
+        df_365['Hours'] = (df_365['Duration']/60).apply(math.floor)
+        df_365['Duration']=df_365['Duration']/60
+        return df_365
+
+    @render_widget
+    def last_year_bar_chart():
+        df_365_songs = lastYearSongTransform()
+        custom_data = [
+            [composer, arranger, hours, minutes] for composer, arranger, hours, minutes in zip(
+                list(df_365_songs['Composer']),
+                list(df_365_songs['Arranger']),
+                list(df_365_songs['Hours']),
+                list(df_365_songs['Minutes']))
+        ]
+
+        
+        fig = go.Figure(go.Bar(
+            x=df_365_songs['Duration'], 
+            y=df_365_songs['Song'], 
+            orientation='h',
+            marker=dict(cornerradius=30),         
+            customdata=custom_data
+        ))
+        fig.update_traces(
+            marker_color="#03A9F4",
+            hovertemplate="""
+                <b>Song:</b> %{y}<br>
+                Composer: %{customdata[0]}<br>
+                Arranger: %{customdata[1]}<br>
+                Total Practice Time: %{customdata[2]} Hours, %{customdata[3]} Minutes
+                <extra></extra>
+            """,
+        )  
+        fig.update_layout(
+            margin=dict(t=0, b=0, l=0, r=0),
+            dragmode=False,
+            modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
+            
+            # Main plot styling
+            font_family='garamond',
+            font_color='#Ff9b15',
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            
+            height=500,
+            plot_bgcolor="rgba(0, 0, 0, 0)",
+        )              
+        fig.update_xaxes(title_text='Practice Time (Hours)')
+        fig.layout.xaxis.fixedrange = True
+        fig.layout.yaxis.fixedrange = True
+
+        figWidget = go.FigureWidget(fig)
+        return figWidget
+
+
+
     @render_widget
     def last_week_bar_chart():
         df_last_week = sessionNotesTransform()
@@ -230,11 +294,14 @@ def server(input, output, session):
             y=df_bar_summary['Song'], 
             orientation='h',
             marker=dict(cornerradius=30),         
-
+            
             ))
-        fig.update_traces(marker_color="#800020",hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>')
+        fig.update_traces(
+            marker_color="#03A9F4",
+            hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
+        )
         fig.update_layout(
-
+            margin=dict(t=0, b=0, l=0, r=0),
             dragmode=False,
             modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
             

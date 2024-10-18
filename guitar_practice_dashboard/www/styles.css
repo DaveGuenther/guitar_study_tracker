@@ -66,6 +66,10 @@ Light green: #008000
 
 }
 
+.bslib-gap-spacing{
+    gap:0px;
+}
+
 .modebar{
     display: none !important;
 }
@@ -114,6 +118,6 @@ body {
     background-color: black;
 }
 
-h3 {
+h3, h6 {
     color: #FFF8DC;
 }
