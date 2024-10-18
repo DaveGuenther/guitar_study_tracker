@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "locale": "en_US.UTF-8",
+  "metadata": {
+    "appmode": "python-shiny",
+    "entrypoint": "app"
+  },
+  "python": {
+    "version": "3.10.12",
+    "package_manager": {
+      "name": "pip",
+      "version": "24.2",
+      "package_file": "requirements.txt"
+    }
+  },
+  "files": {
+    "requirements.txt": {
+      "checksum": "6cf7b445fb1e7177cefc682d13bbe2b7"
+    },
+    "app.py": {
+      "checksum": "30f7303f5078dce07e0d9e2d4c78fa4c"
+    },
+    "data_prep.py": {
+      "checksum": "81dfa6f935263486178084ab8055c80a"
+    },
+    "data_processing_old.py": {
+      "checksum": "c3b73cd0a4348a3bccbeb7d2e4b6c96d"
+    },
+    "database.py": {
+      "checksum": "8af75d3dbb6a26b865e01453c34b8407"
+    },
+    "filter_shelf.py": {
+      "checksum": "3b05eecebdc51e0163eb3c295f5a871c"
+    },
+    "orm.py": {
+      "checksum": "4708c1e459ef5d55529ef73bfa3a64f8"
+    },
+    "table_navigator_old.py": {
+      "checksum": "1fb626b9d2a4fb925de58ffb4a2226b4"
+    },
+    "variables.env": {
+      "checksum": "45b5a78e83408f490e45ee725177f7bf"
+    },
+    "www/guitar-head-stock.png": {
+      "checksum": "6b0ad9cf0574fe3a439985656a273283"
+    },
+    "www/styles.css": {
+      "checksum": "c443267221ac9044c6c03ca3c80c12bf"
+    }
+  }
+}

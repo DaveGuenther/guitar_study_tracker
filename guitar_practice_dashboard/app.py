@@ -63,7 +63,7 @@ app_ui = ui.page_fluid(
                             output_widget(id='waffle_chart'),
                             ui.img(src='guitar-head-stock.png', width="485px", height="252"),
                             id='guitar-neck-container',
-                        ).add_style('width:1850px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                        ).add_style('width:1800px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                         class_="dashboard-card",
                     ),
 
@@ -78,7 +78,8 @@ app_ui = ui.page_fluid(
                         ui.column(6,
                             ui.card(
                                 ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
-                                ui.output_data_frame(id="sessionNotesTransform").add_class('dashboard-table'),
+                                output_widget(id='last_week_bar_chart'),
+                                ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
                                 class_="dashboard-card",
                             ),
                         ),
@@ -149,7 +150,7 @@ def server(input, output, session):
         df_filtered = df_365
         return df_filtered
 
-    @render.data_frame
+    @reactive.calc
     def sessionNotesTransform():
         today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
         df_session_notes = df_sessions[df_sessions['session_date']>=today-pd.DateOffset(days=7)]
@@ -158,6 +159,11 @@ def server(input, output, session):
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
         df_out = df_session_notes[['Song','Session Date','Notes','Duration']]
+        return df_out.copy()
+
+    @render.data_frame
+    def sessionNotesTable():
+        df_out = sessionNotesTransform()
         return render.DataTable(df_out, width="100%", styles=[{'class':'dashboard-table'}])
 
     @reactive.calc
@@ -214,6 +220,38 @@ def server(input, output, session):
         
         return ret_dict
 
+    @render_widget
+    def last_week_bar_chart():
+        df_last_week = sessionNotesTransform()
+        df_bar_summary = df_last_week.groupby('Song',as_index=False)[['Duration']].sum()
+        df_bar_summary = df_bar_summary.sort_values("Duration", ascending=True)
+        fig = go.Figure(go.Bar(
+            x=df_bar_summary['Duration'], 
+            y=df_bar_summary['Song'], 
+            orientation='h',
+            marker=dict(cornerradius=30),         
+
+            ))
+        fig.update_traces(marker_color="#800020",hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>')
+        fig.update_layout(
+
+            dragmode=False,
+            modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
+            
+            # Main plot styling
+            font_family='garamond',
+            font_color='#Ff9b15',
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            
+            height=200,
+            plot_bgcolor="rgba(0, 0, 0, 0)",
+        )
+        fig.update_xaxes(title_text='Practice Time (Minutes)')
+        fig.layout.xaxis.fixedrange = True
+        fig.layout.yaxis.fixedrange = True
+
+        figWidget = go.FigureWidget(fig)
+        return figWidget
 
     @render_widget
     def waffle_chart():

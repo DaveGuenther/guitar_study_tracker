@@ -66,6 +66,20 @@ Light green: #008000
 
 }
 
+.modebar{
+    display: none !important;
+}
+
+/* This doesn't do anything */
+.shiny-data-grid.shiny-data-grid-table {
+    border-top: none !important;
+}
+
+/* This doesn't do anything */
+.shiny-data-frame {
+    border-top: none !important;
+}
+
 thead, th{
     background-color: #160d08 !important;
     border: 0px !important;
@@ -74,6 +88,7 @@ thead, th{
 
 .dashboard-table{
     background-color: #dbcaa4 !important;
+    border-top: 0px !important; /* This doesn't do anything */
 }
 
 .dashboard-card{
