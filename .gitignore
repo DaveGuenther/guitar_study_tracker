@@ -1,5 +1,6 @@
 **.venv_wr/
 **.venv_rd/
+**.venv/
 **__pycache__/
 data_entry_app/variables.env
 data_entry_app/manifest.json

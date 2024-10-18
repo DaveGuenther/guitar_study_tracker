@@ -3,5 +3,6 @@ psycopg2-binary==2.9.9
 psycopg2==2.9.9
 sqlalchemy==2.0.34
 shiny==1.1.0
+shinywidgets==0.3.3
 python-dotenv==1.0.1
 rsconnect-python==1.24.0

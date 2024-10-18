@@ -70,21 +70,26 @@ app_ui = ui.page_fluid(
 
                     ui.row(
                         ui.column(6,
-                            ui.card(
-                                ui.h3("Time Spent Practicing Songs (Past Year)"),
-                                output_widget(id='last_year_bar_chart'),
-                                class_="dashboard-card",
-                            ),
+                            ui.div(
+                                ui.card(
+                                    ui.h3("Time Spent Practicing Songs (Past Year)"),
+                                    output_widget(id='last_year_bar_chart'),
+                                    class_="dashboard-card",
+                                ),
+                                ui.div(class_='blank-fill-container'),
+                            ).add_style('height:500px; overflow-y: auto; display: flex;'),
                             ui.h6("Dave Guenther, 2024"),
                         ),
                         ui.column(6,
-                            ui.card(
-                                ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
-                                output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
-                                ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
-                                class_="dashboard-card",
+                            ui.div(
+                                ui.card(
+                                    ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
+                                    output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
+                                    ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
+                                    class_="dashboard-card",
+                                ),
+                                ui.div(class_='blank-fill-container'),
                             ),
-                            
                         ),
                     )
                 ), 
@@ -253,6 +258,7 @@ def server(input, output, session):
             customdata=custom_data
         ))
         fig.update_traces(
+            width=.3,
             marker_color="#03A9F4",
             hovertemplate="""
                 <b>Song:</b> %{y}<br>
@@ -272,8 +278,17 @@ def server(input, output, session):
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
-            height=500,
+            #height=500,
             plot_bgcolor="rgba(0, 0, 0, 0)",
+
+            # Tooltip Styling
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Garamond",
+                bordercolor="black",
+                align="left"
+            ),
         )              
         fig.update_xaxes(title_text='Practice Time (Hours)')
         fig.layout.xaxis.fixedrange = True
@@ -297,6 +312,7 @@ def server(input, output, session):
             
             ))
         fig.update_traces(
+            width=.3, # Set manual width of the bar traces
             marker_color="#03A9F4",
             hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
         )
@@ -312,6 +328,11 @@ def server(input, output, session):
             
             height=200,
             plot_bgcolor="rgba(0, 0, 0, 0)",
+
+            # Bar gap styling
+            barmode='group',
+            bargap=0.2,
+            bargroupgap=0.0,
         )
         fig.update_xaxes(title_text='Practice Time (Minutes)')
         fig.layout.xaxis.fixedrange = True
