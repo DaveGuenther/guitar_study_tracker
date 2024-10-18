@@ -256,9 +256,9 @@ def server(input, output, session):
             marker_color="#03A9F4",
             hovertemplate="""
                 <b>Song:</b> %{y}<br>
-                Composer: %{customdata[0]}<br>
-                Arranger: %{customdata[1]}<br>
-                Total Practice Time: %{customdata[2]} Hours, %{customdata[3]} Minutes
+                <b>Composer:</b> %{customdata[0]}<br>
+                <b>Arranger:</b> %{customdata[1]}<br>
+                <b>Total Practice Time:</b> %{customdata[2]} Hours, %{customdata[3]} Minutes
                 <extra></extra>
             """,
         )  
