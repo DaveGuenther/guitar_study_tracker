@@ -1,0 +1,16 @@
+
+/* Flex Box Styles*/
+
+.flex-vertical{ /* Like Tableau Vertical Container */
+    display:flex;
+    flex-direction:column;
+}
+
+.flex-horizontal{ /* Like Tableau Horizontal Container */
+    display:flex;
+    flex-direction:row;
+}
+
+.flex-blank { /* Like Tableau Blank */
+    flex-grow:1;
+}

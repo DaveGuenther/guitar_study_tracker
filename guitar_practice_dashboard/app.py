@@ -51,47 +51,83 @@ session_model.connect(user_name, pw, True)
 #session_model.df_raw= pd.read_csv('data.csv') # remove when done testing
 df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
 
-
+def sessions_filter_shelf():
+    ret_val = ui.div(
+        ui.input_checkbox_group(
+            "song_title",
+            "Song Title",
+            choices={key:value for key,value in zip(df_365['Song'], df_365['Song'])},
+            selected=[key for key in df_365['Song']],
+        ),
+        #ui.input_select(id='song_title',label="Song Title",choices=list(df_sessions['Song'].unique()),selected=list(df_sessions['Song'].unique()),multiple=True)
+    )
+    return ret_val
 
 app_ui = ui.page_fluid(
         ui.tags.link(href='styles.css', rel="stylesheet"),
+        ui.tags.link(href='flex.css', rel="stylesheet"),
         ui.div(
             ui.page_navbar(
                 # Execute ui code for shiny modules
                 ui.nav_panel("Practice Sessions", 
-                    ui.card(
-                        ui.div(
-                            output_widget(id='waffle_chart'),
-                            ui.img(src='guitar-head-stock.png', width="485px", height="252"),
-                            id='guitar-neck-container',
-                        ).add_style('width:1800px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
-                        class_="dashboard-card",
-                    ),
+                    ui.page_sidebar(
+                        ui.sidebar(
+                            sessions_filter_shelf()
+                        ),
+                        ui.card(
+                            ui.div(
+                                output_widget(id='waffle_chart'),
+                                ui.img(src='guitar-head-stock.png', width="485px", height="252"),
+                                id='guitar-neck-container',
+                            ).add_style('width:1800px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                            class_="dashboard-card",
+                        ),
+                    
+                        ui.row(
 
-                    ui.row(
-                        ui.column(6,
-                            ui.div(
-                                ui.card(
-                                    ui.h3("Time Spent Practicing Songs (Past Year)"),
-                                    output_widget(id='last_year_bar_chart'),
-                                    class_="dashboard-card",
+                            ui.column(6,
+                                ui.div(
+                                    ui.card(
+                                        ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
+                                        output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
+                                        ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
+                                        ui.div("",class_='blank-fill-container'),
+                                        class_="dashboard-card",
+                                    ),
                                 ),
-                                ui.div(class_='blank-fill-container'),
-                            ).add_style('height:500px; overflow-y: auto; display: flex;'),
-                            ui.h6("Dave Guenther, 2024"),
-                        ),
-                        ui.column(6,
-                            ui.div(
-                                ui.card(
-                                    ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
-                                    output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
-                                    ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
-                                    class_="dashboard-card",
-                                ),
-                                ui.div(class_='blank-fill-container'),
                             ),
-                        ),
-                    )
+
+                            ui.column(6,
+                                
+                                ui.card(
+                                    ui.div(
+                                        ui.h3("Time Spent Practicing Songs (Past Year)"),
+                                        output_widget(id='last_year_bar_chart'),
+                                        ui.div(class_='flex-blank'),
+                                    ).add_class("flex-vertical",)
+                                ).add_class("dashboard-card").add_style('overflow-y: auto; display: flex;'),
+                                ui.div(class_='flex-blank'),
+                                ui.h6(
+                                    ui.span("").add_class('flex-blank'),
+                                    ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
+                                    ", 2024",
+                                    ui.span("").add_style("width:5px; display:inline;"),  
+                                    "|",
+                                    ui.span("").add_style("width:5px; display:inline;"),  
+                                    "Source Code: ",
+                                    ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
+                                    ui.span("").add_style("width:5px; display:inline;"),
+                                    "|",
+                                    ui.span("").add_style("width:5px; display:inline;"),  
+                                    "Data Source: ",
+                                    ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+                                ).add_class('flex-horizontal'),
+                            ).add_class("flex-vertical"),
+                        ),    
+                            
+                        
+
+                    ),
                 ), 
                 ui.nav_panel("Career Repertoire",
                     "Career Repretoire",
@@ -156,6 +192,8 @@ def server(input, output, session):
         This returns the df_sessions dataframe with only filter shelf filters applied (Stage 1).
         '''
         df_filtered = df_365
+        #df_filtered = df_365[df_365['Song'].isin(list(input.song_title()))]
+        print(input.song_title())
         return df_filtered
 
     @reactive.calc
@@ -236,11 +274,13 @@ def server(input, output, session):
         df_365['Minutes'] = df_365['Duration']%60
         df_365['Hours'] = (df_365['Duration']/60).apply(math.floor)
         df_365['Duration']=df_365['Duration']/60
+        df_365 = df_365.sort_values('Duration', ascending=True)
         return df_365
 
     @render_widget
     def last_year_bar_chart():
         df_365_songs = lastYearSongTransform()
+        num_bars = len(list(df_365_songs['Song']))
         custom_data = [
             [composer, arranger, hours, minutes] for composer, arranger, hours, minutes in zip(
                 list(df_365_songs['Composer']),
@@ -258,7 +298,7 @@ def server(input, output, session):
             customdata=custom_data
         ))
         fig.update_traces(
-            width=.3,
+            #width=.3,
             marker_color="#03A9F4",
             hovertemplate="""
                 <b>Song:</b> %{y}<br>
@@ -278,7 +318,7 @@ def server(input, output, session):
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
-            #height=500,
+            height=50+(num_bars*20),
             plot_bgcolor="rgba(0, 0, 0, 0)",
 
             # Tooltip Styling
@@ -303,6 +343,7 @@ def server(input, output, session):
     def last_week_bar_chart():
         df_last_week = sessionNotesTransform()
         df_bar_summary = df_last_week.groupby('Song',as_index=False)[['Duration']].sum()
+        num_bars = len(list(df_bar_summary['Song']))
         df_bar_summary = df_bar_summary.sort_values("Duration", ascending=True)
         fig = go.Figure(go.Bar(
             x=df_bar_summary['Duration'], 
@@ -312,7 +353,6 @@ def server(input, output, session):
             
             ))
         fig.update_traces(
-            width=.3, # Set manual width of the bar traces
             marker_color="#03A9F4",
             hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
         )
@@ -326,7 +366,7 @@ def server(input, output, session):
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
-            height=200,
+            height=50+(num_bars*20),
             plot_bgcolor="rgba(0, 0, 0, 0)",
 
             # Bar gap styling
