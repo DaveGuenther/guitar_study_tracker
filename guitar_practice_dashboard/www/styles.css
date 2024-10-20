@@ -41,6 +41,7 @@ Light green: #008000
     color:#40291D;
     color:#B2913C;
     color:#800020;
+    color:#922b0c;
     color:#40291D;
     color:#B2913C;
     color:#666666;
@@ -97,7 +98,9 @@ thead, th{
 
 .dashboard-card{
     background-color: #160d08 !important;
+    color: #FFF8DC;
 }
+
 
 .tab-content>.active{
     padding-right:12px; /*calc(var(--bs-gutter-x)* .5);*/
@@ -116,10 +119,40 @@ thead, th{
 body {
     font-family: garamond;
     background-color: black;
+    color: #FFF8DC;
 }
 
 h3, h6 {
     color: #FFF8DC;
 }
 
+/* Sidebar background, border, and text formatting */
+.bslib-sidebar-layout>.sidebar{
+    color: #dbcaa4;
+    background-color: #101010;
+    border-radius: 8px;
+    
+    /* get it to line up with first cards in main */
+    padding:5px;
+    margin-top: 5px;
+    margin-left: 0px;
+    margin-bottom: 43px
+}
 
+/* Main space in a nav panel next to the sidebar where cards are laid out */
+.bslib-sidebar-layout>.main{
+    padding:5px;
+}
+
+/*sidebar control label formatting*/
+.form-label, .shiny-input-container .control-label{
+    font-weight: 700;
+}
+
+/* Collapse/Expand Toggle icon on Side bar */
+.bslib-sidebar-layout>.collapse-toggle, .bslib-sidebar-layout.sidebar-collapsed>.collapse-toggle {
+    color: #dbcaa4;
+    background-color: #922b0c;
+    border-radius: 15px;
+    top: calc(var(--_icon-size, 1rem)); /* makes toggle icon be evenly spaced from top as from right */
+}

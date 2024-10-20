@@ -53,6 +53,7 @@ df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_mo
 
 def sessions_filter_shelf():
     ret_val = ui.div(
+        ui.h3("Filters:"),
         ui.input_checkbox_group(
             "song_title",
             "Song Title",
@@ -72,14 +73,16 @@ app_ui = ui.page_fluid(
                 ui.nav_panel("Practice Sessions", 
                     ui.page_sidebar(
                         ui.sidebar(
-                            sessions_filter_shelf()
+                            sessions_filter_shelf(),
+                            open="closed",
                         ),
                         ui.card(
                             ui.div(
                                 output_widget(id='waffle_chart'),
                                 ui.img(src='guitar-head-stock.png', width="485px", height="252"),
                                 id='guitar-neck-container',
-                            ).add_style('width:1800px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                            ).add_style('width:1750px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
+                            ui.div("* Indicates that a video recording was made that day.").add_style("text-align:right;"),
                             class_="dashboard-card",
                         ),
                     
@@ -95,7 +98,7 @@ app_ui = ui.page_fluid(
                                         class_="dashboard-card",
                                     ),
                                 ),
-                            ),
+                            ).add_style("padding-right:6px;"),
 
                             ui.column(6,
                                 
@@ -114,16 +117,16 @@ app_ui = ui.page_fluid(
                                     ui.span("").add_style("width:5px; display:inline;"),  
                                     "|",
                                     ui.span("").add_style("width:5px; display:inline;"),  
-                                    "Source Code: ",
+                                    "Source Code:",
                                     ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
                                     ui.span("").add_style("width:5px; display:inline;"),
                                     "|",
                                     ui.span("").add_style("width:5px; display:inline;"),  
-                                    "Data Source: ",
+                                    "Data Source:",
                                     ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
                                 ).add_class('flex-horizontal'),
-                            ).add_class("flex-vertical"),
-                        ),    
+                            ).add_class("flex-vertical").add_style("padding-left:6px;"),
+                        ).add_style("margin-top: 10px;"),    
                             
                         
 
