@@ -46,3 +46,7 @@ rsconnect deploy shiny --new data_entry_app/ --name shinyapps-io --title "guitar
 ```
 
 ### Visual Dashboard:
+To deploy to shinyapps.io:
+``` linux
+rsconnect deploy shiny --new guitar_practice_dashboard/ --name shinyapps-io --title "guitar_study_tracker"
+```
