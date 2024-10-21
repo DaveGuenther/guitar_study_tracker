@@ -190,10 +190,6 @@ app_ui = ui.page_fluid(
         ),
         title="Guitar Study Tracker"
 
-        
-        
-
-
 )
 
 def table_calc_has_url(df_in):
@@ -293,7 +289,7 @@ def server(input, output, session):
     def lastYearSongTransform():
         df_365 = df_365_stage_1()
         df_365 = df_365[df_365['Song'].notna()]
-        df_365 = df_365.groupby(['Song','Composer','Arranger'], as_index=False)['Duration'].sum()
+        df_365 = df_365.groupby(['Song Type','Song','Composer','Arranger'], as_index=False)['Duration'].sum()
         df_365['Minutes'] = df_365['Duration']%60
         df_365['Hours'] = (df_365['Duration']/60).apply(math.floor)
         df_365['Duration']=df_365['Duration']/60
@@ -315,7 +311,7 @@ def server(input, output, session):
         
         fig = go.Figure(go.Bar(
             x=df_365_songs['Duration'], 
-            y=df_365_songs['Song'], 
+            y=[df_365_songs['Song Type'],df_365_songs['Song']], 
             orientation='h',
             marker=dict(cornerradius=30),         
             customdata=custom_data
@@ -346,6 +342,7 @@ def server(input, output, session):
 
             #Axis Label Style
             yaxis_tickfont=dict(size=14),
+            
 
             # Tooltip Styling
             hoverlabel=dict(
@@ -357,6 +354,7 @@ def server(input, output, session):
             ),
         )              
         fig.update_xaxes(title_text='Practice Time (Hours)')
+        #fig.update_yaxes(ticklabelposition='outside top')
         fig.layout.xaxis.fixedrange = True
         fig.layout.yaxis.fixedrange = True
 
@@ -394,6 +392,7 @@ def server(input, output, session):
             
             # Axis Label Size
             yaxis_tickfont=dict(size=14),
+            #label = dict(yanchor='top'),
 
             height=50+(num_bars*20),
             plot_bgcolor="rgba(0, 0, 0, 0)",
@@ -402,6 +401,15 @@ def server(input, output, session):
             barmode='group',
             bargap=0.2,
             bargroupgap=0.0,
+
+            # Tooltip Styling
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Garamond",
+                bordercolor="black",
+                align="left"
+            ),
         )
         fig.update_xaxes(title_text='Practice Time (Minutes)')
         fig.layout.xaxis.fixedrange = True
@@ -427,7 +435,16 @@ def server(input, output, session):
                 text=ret_dict['customdata'][2],
                 texttemplate="%{text}",
                 textfont={'size':14},
-                hovertemplate='Date: %{customdata[1]}<br>Duration (Minutes): %{z}',           
+                #hovertemplate='Date: %{customdata[1]}<br>Duration (Minutes): %{z}',           
+                
+                # Tooltip Styling
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Garamond",
+                    bordercolor="black",
+                    align="left"
+                ),
                 xgap=5,
                 ygap=5,
                 hoverongaps=False,
@@ -445,6 +462,13 @@ def server(input, output, session):
                 
             ),
         )
+        fig.update_traces(
+            hovertemplate="""
+                <b>Date:</b> %{customdata[1]}<br>
+                <b>Total Duration (Minutes):</b> %{z}<br>
+                <extra></extra>
+            """,
+        )  
 
         fig.update_layout(
             margin=dict(t=42, b=0, l=0, r=0),
@@ -467,7 +491,7 @@ def server(input, output, session):
             height=277,
             plot_bgcolor="#40291D",
 
-    
+            
         )
         fig.layout.xaxis.fixedrange = True
         fig.layout.yaxis.fixedrange = True
