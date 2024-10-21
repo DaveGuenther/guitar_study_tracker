@@ -119,7 +119,7 @@ thead, th{
 .navbar.navbar-default{
     background-image: url("rosette_a_tall.png"),url("rosette_b.png");
     background-size: 150px, 150px;
-    background-repeat: no-repeat, repeat-x;
+    background-repeat: no-repeat, repeat;
     background-color: #D9B7A1 !important;
     padding-left: 60px;
     

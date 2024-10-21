@@ -68,6 +68,8 @@ def processData(session_data, song_data, artist_data, style_data):
     df_summary['week_str'] = df_summary.apply(lambda row: str(row['week_start'].strftime('%b %d'))+" - "+str(row['week_end'].strftime('%b %d')),axis=1)
     df_summary['Video URL'] = df_summary['Video URL'].replace({np.nan: None})
     df_summary['Duration'] = df_summary['Duration'].fillna(0)
+    df_summary['Composer'] = df_summary['Composer'].fillna("Unknown")
+    df_summary['Arranger'] = df_summary['Arranger'].fillna("Unknown")
     #df_summary['has_url'] = df_summary['Video URL'].apply(lambda row: '*' if row else'')
     #df_grouped_by_date = df_summary.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
     #df_summary['has_url'] = df_grouped_by_date['Video URL'].transform(lambda group: '*' if any(group.values) else'')

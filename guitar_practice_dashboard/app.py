@@ -80,7 +80,7 @@ app_ui = ui.page_fluid(
                         ui.card(
                             ui.div(
                                 output_widget(id='waffle_chart'),
-                                ui.img(src='guitar-head-stock.png', width="485px", height="252"),
+                                ui.img(src='guitar-head-stock.png', height="240px"),
                                 id='guitar-neck-container',
                             ).add_style('width:1750px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                             ui.div("* Indicates that a video recording was made that day.").add_style("text-align:right;"),
@@ -174,6 +174,16 @@ app_ui = ui.page_fluid(
                         ),                                                                                                
                     ),
                 ), 
+                ui.nav_panel(
+                    "Acoustic Arsenal",
+                    "Acoustic Arsenal"
+
+                ),
+                ui.nav_panel(
+                    "About",
+                    "About"
+
+                ),                
             id='main_nav_bar',     
             title="Guitar Study Tracker",
             ),
@@ -185,6 +195,11 @@ app_ui = ui.page_fluid(
 
 
 )
+
+def table_calc_has_url(df_in):
+    df_grouped_by_date = df_in.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
+    ser_has_url = df_grouped_by_date['Video URL'].transform(lambda group: '*' if any(group.values) else'')
+    return pd.Series(ser_has_url, name='has_url')
 
 def server(input, output, session):
     
@@ -207,7 +222,7 @@ def server(input, output, session):
         df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
-        df_out = df_session_notes[['Song','Session Date','Notes','Duration']]
+        df_out = df_session_notes[['Song','Session Date','Notes','Duration']].reset_index()
         return df_out.copy()
 
     @render.data_frame
@@ -222,9 +237,10 @@ def server(input, output, session):
         #prep for heatmap
         df_365_filtered = df_365_stage_1()
 
-        df_grouped_by_date = df_365_filtered.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
-        df_365_filtered['has_url'] = df_grouped_by_date['Video URL'].transform(lambda group: '*' if any(group.values) else'')
-
+        # This is a table calculation to establish the 'has_url' columns that contains a * if any of the sessions on that date included a youtube recording
+        has_url = table_calc_has_url(df_365_filtered.copy())
+        df_365_filtered = pd.concat([df_365_filtered, has_url],axis=1) # adds the has_url column
+        
         df_grouped = df_365_filtered[['Weekday_abbr','session_date','month_abbr', 'has_url','week_start_day_num','month_week_start','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_abbr','month_year','session_date','has_url','week_start_day_num','month_week_start'], as_index=False).sum()
         
         df_grouped = df_grouped.sort_values(['session_date'])
@@ -431,7 +447,7 @@ def server(input, output, session):
         )
 
         fig.update_layout(
-            margin=dict(t=44, b=0, l=0, r=0),
+            margin=dict(t=42, b=0, l=0, r=0),
             
             title=dict(text="Daily Practice Time (Past Year)",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'),
             xaxis_side='bottom',
