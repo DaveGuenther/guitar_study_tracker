@@ -52,13 +52,14 @@ session_model.connect(user_name, pw, True)
 df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
 
 def sessions_filter_shelf():
+    songs = df_365[df_365['Song'].notna()]['Song'].unique()
     ret_val = ui.div(
         ui.h3("Filters:"),
         ui.input_checkbox_group(
             "song_title",
             "Song Title",
-            choices={key:value for key,value in zip(df_365['Song'], df_365['Song'])},
-            selected=[key for key in df_365['Song']],
+            choices={key:value for key,value in zip(songs, songs)},
+            selected=[key for key in songs],
         ),
         #ui.input_select(id='song_title',label="Song Title",choices=list(df_sessions['Song'].unique()),selected=list(df_sessions['Song'].unique()),multiple=True)
     )
@@ -124,7 +125,7 @@ app_ui = ui.page_fluid(
                                     ui.span("").add_style("width:5px; display:inline;"),  
                                     "Data Source:",
                                     ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
-                                ).add_class('flex-horizontal'),
+                                ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),
                             ).add_class("flex-vertical").add_style("padding-left:6px;"),
                         ).add_style("margin-top: 10px;"),    
                             
@@ -174,10 +175,10 @@ app_ui = ui.page_fluid(
                     ),
                 ), 
             id='main_nav_bar',     
-            title="Guitar Study Tracker Dashboard",
+            title="Guitar Study Tracker",
             ),
         ),
-        title="Guitar Study Tracker Dashboard"
+        title="Guitar Study Tracker"
 
         
         
@@ -195,8 +196,7 @@ def server(input, output, session):
         This returns the df_sessions dataframe with only filter shelf filters applied (Stage 1).
         '''
         df_filtered = df_365
-        #df_filtered = df_365[df_365['Song'].isin(list(input.song_title()))]
-        print(input.song_title())
+        df_filtered = df_365[(df_365['Song'].isin(input.song_title()))|(df_365['Song'].isna())]
         return df_filtered
 
     @reactive.calc
@@ -220,8 +220,12 @@ def server(input, output, session):
         pd.set_option('future.no_silent_downcasting', True) # needed for fillna() commands below
         today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
         #prep for heatmap
-        
-        df_grouped = df_365_stage_1()[['Weekday_abbr','session_date','month_abbr', 'has_url','week_start_day_num','month_week_start','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_abbr','month_year','session_date','has_url','week_start_day_num','month_week_start'], as_index=False).sum()
+        df_365_filtered = df_365_stage_1()
+
+        df_grouped_by_date = df_365_filtered.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
+        df_365_filtered['has_url'] = df_grouped_by_date['Video URL'].transform(lambda group: '*' if any(group.values) else'')
+
+        df_grouped = df_365_filtered[['Weekday_abbr','session_date','month_abbr', 'has_url','week_start_day_num','month_week_start','Year','month_year', 'Duration']].groupby(['Weekday_abbr','Year','month_abbr','month_year','session_date','has_url','week_start_day_num','month_week_start'], as_index=False).sum()
         
         df_grouped = df_grouped.sort_values(['session_date'])
         df_pivoted = df_grouped.pivot(index=['Weekday_abbr'], columns=['Year','month_year','month_week_start']) # produces a nested axis grid with a "df" for every column passed in (Duration, session_date, Year, etc).
@@ -324,6 +328,9 @@ def server(input, output, session):
             height=50+(num_bars*20),
             plot_bgcolor="rgba(0, 0, 0, 0)",
 
+            #Axis Label Style
+            yaxis_tickfont=dict(size=14),
+
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
@@ -369,6 +376,9 @@ def server(input, output, session):
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
+            # Axis Label Size
+            yaxis_tickfont=dict(size=14),
+
             height=50+(num_bars*20),
             plot_bgcolor="rgba(0, 0, 0, 0)",
 
@@ -428,11 +438,13 @@ def server(input, output, session):
             xaxis_dtick=1, 
             
             # Main plot styling
-            font_family='garamond',
+            font_family='garamond',            
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
-           
+            xaxis_tickfont=dict(size=14),
+            yaxis_tickfont=dict(size=14),
+
             yaxis_dtick=1,
             autosize=False,
             width=1250,#75+(30*num_columns),#1635 if 75+(30*num_columns)>1635 else 75+(30*num_columns),
@@ -450,6 +462,7 @@ def server(input, output, session):
             tickangle=285,
             anchor='free',
             position=0,
+
 
 
         )

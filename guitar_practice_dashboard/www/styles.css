@@ -85,6 +85,10 @@ Light green: #008000
     border-top: none !important;
 }
 
+.shiny-data-grid-summary{
+    background-color: #160d08;
+}
+
 thead, th{
     background-color: #160d08 !important;
     border: 0px !important;
@@ -113,7 +117,12 @@ thead, th{
 }
 
 .navbar.navbar-default{
+    background-image: url("rosette_a_tall.png"),url("rosette_b.png");
+    background-size: 150px, 150px;
+    background-repeat: no-repeat, repeat-x;
     background-color: #D9B7A1 !important;
+    padding-left: 60px;
+    
 }
 
 body {
@@ -142,6 +151,10 @@ h3, h6 {
 /* Main space in a nav panel next to the sidebar where cards are laid out */
 .bslib-sidebar-layout>.main{
     padding:5px;
+}
+
+.sidebar{
+    height: fit-content;
 }
 
 /*sidebar control label formatting*/
