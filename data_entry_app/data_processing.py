@@ -194,6 +194,7 @@ class SongInputTableModel(ShinyInputTableModel):
     __db_artist_model=None
     __artist_lookup=None
     __style_lookup=None
+    __song_type_lookup={'Song':'Song','Exercise':'Exercise'} # Too lazy to make a lookup table for two values.  I'll do it is there's ever a third type
 
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_artist_model:database.DatabaseModel, db_style_model:database.DatabaseModel):
         self._namespace_id=namespace_id
@@ -217,8 +218,8 @@ class SongInputTableModel(ShinyInputTableModel):
         df_resolved_song['At Tempo Date'] = pd.to_datetime(df_resolved_song['at_tempo_date']).dt.strftime("%m/%d/%Y")
         df_resolved_song['Off Book Date'] = pd.to_datetime(df_resolved_song['off_book_date']).dt.strftime("%m/%d/%Y")
         df_resolved_song['Play Ready Date'] = pd.to_datetime(df_resolved_song['play_ready_date']).dt.strftime("%m/%d/%Y")
-        df_resolved_song = df_resolved_song.rename({'title':'Title'},axis=1).sort_values(['last_name','Title'])
-        self.df_summary = df_resolved_song[['id','Title','Composer','Style','Start Date','Off Book Date','At Tempo Date','Play Ready Date']]
+        df_resolved_song = df_resolved_song.rename({'title':'Title', 'song_type':'Song Type'},axis=1).sort_values(['last_name','Title'])
+        self.df_summary = df_resolved_song[['id','Title','Composer','Song Type','Style','Start Date','Off Book Date','At Tempo Date','Play Ready Date']]
 
 
         # Establish artist lookup
@@ -228,6 +229,9 @@ class SongInputTableModel(ShinyInputTableModel):
         # Establish style lookup
         self.__style_lookup = {'':''}
         self.__style_lookup.update({value:label for value,label in zip(df_raw_style['id'],df_raw_style['style'])})
+
+        
+
         
 
     def __init_title(self):
@@ -237,7 +241,16 @@ class SongInputTableModel(ShinyInputTableModel):
         else:
             # User selected New
             return None
+
+    def __init_song_type(self):
+        # provide initial value for the song_type field of the input form
+        if self._df_selected_id:
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['song_type'].values[0])
+        else:
+            # User selected New
+            return None
         
+
     def __init_composer(self):
         # provide initial value for the arranger lookup field of the input form
         if self._df_selected_id: 
@@ -270,6 +283,7 @@ class SongInputTableModel(ShinyInputTableModel):
         else:
             # User selected New
             return '' # New Record, there is no value    
+
 
 
     def __init_style(self):
@@ -347,6 +361,7 @@ class SongInputTableModel(ShinyInputTableModel):
         return ui.row(
             ui.div(self._init_id_text()),
             ui.input_text(id="title",label=f"{self._title} Title *", value=self.__init_title()).add_style('color:red;'), # REQUIRED VALUE
+            ui.input_select(id='song_type', label="Song Type", choices=self.__song_type_lookup, selected=self.__init_song_type()),
             ui.input_select(id='style',label="Style", choices=self.__style_lookup, selected=self.__init_style()),
             ui.input_select(id="composer",label="Composer",choices=self.__artist_lookup, selected=self.__init_composer()),
             ui.input_select(id="arranger",label="Arranger",choices=self.__artist_lookup, selected=self.__init_arranger()),
@@ -373,6 +388,7 @@ class SongInputTableModel(ShinyInputTableModel):
                 composer_id = None if input.composer() == '' else input.composer()
                 arranger_id = None if input.arranger() == '' else input.arranger()
                 style_id = None if input.style() == '' else input.style()
+                song_type = None if input.song_type() == '' else input.song_type()
                 # Create single row as dataframe
                 df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
                                                    'title':[input.title()], # REQUIRED VALUE
@@ -382,7 +398,8 @@ class SongInputTableModel(ShinyInputTableModel):
                                                    'start_date':[input.start_date()],
                                                    'off_book_date':[input.off_book_date()],
                                                    'at_tempo_date':[input.at_tempo_date()],
-                                                   'play_ready_date':[input.play_ready_date()]})
+                                                   'play_ready_date':[input.play_ready_date()],
+                                                   'song_type':[song_type]})
                 #print(df_row_to_database.to_string())
                 if self._df_selected_id:
                     self._db_table_model.update(df_row_to_database)

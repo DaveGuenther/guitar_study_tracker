@@ -42,6 +42,7 @@ tbl_song = Table(
     Column('style_id', Text, nullable=True), # foreign key to style.id
     Column('composer', Integer, nullable=True), # foreign key to artist.id
     Column('arranger', Integer, nullable=True), # foreign key to artist.id (writers and arrangers can be the same person)
+    Column('song_type', Text, nullable=True),
     schema=schema,
 )
 
