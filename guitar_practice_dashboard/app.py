@@ -8,6 +8,7 @@ import datetime
 import pytz
 from dotenv import load_dotenv
 
+video_link="""<iframe width="560" height="315" src="https://www.youtube.com/embed/5xcqZiVpdy4?si=_Qak6xkMo-VblHun" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""
 
 # Web/Visual frameworks
 from shiny import App, ui, render, reactive, types, req, module
@@ -113,6 +114,7 @@ app_ui = ui.page_fluid(
                                 ui.div(class_='flex-blank'),
                                 ui.h6(
                                     ui.span("").add_class('flex-blank'),
+                                    #ui.div(ui.HTML(video_link)),
                                     ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
                                     ", 2024",
                                     ui.span("").add_style("width:5px; display:inline;"),  
@@ -210,20 +212,25 @@ def server(input, output, session):
         df_filtered = df_365[(df_365['Song'].isin(input.song_title()))|(df_365['Song'].isna())]
         return df_filtered
 
-    @reactive.calc
-    def sessionNotesTransform():
-        today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
-        df_session_notes = df_sessions[df_sessions['session_date']>=today-pd.DateOffset(days=7)]
+    def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), num_days=7):
+        """
+        returns the session data table based on input parameters:
+        from_date (datetime.datetime): This is the date to start providing session data from
+        num_days (int): number of days before from_date to incldue data in the session table.
+        """
+        #today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
+        df_session_notes = df_sessions[(df_sessions['session_date']>=from_date-pd.DateOffset(days=num_days))&(df_sessions['session_date']<=pd.Timestamp(from_date))]
         df_session_notes = df_session_notes.sort_values('session_date')
         df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
-        df_out = df_session_notes[['Song','Session Date','Notes','Duration']].reset_index()
+        df_session_notes['Video Link'] = df_session_notes['Video URL'].apply(lambda row: ui.HTML(f'<a href="{row}" target="_blank">Video</a>') if row else row)
+        df_out = df_session_notes[['Song','Session Date','Notes','Duration', 'Video Link']].reset_index()
         return df_out.copy()
 
     @render.data_frame
     def sessionNotesTable():
-        df_out = sessionNotesTransform()
+        df_out = sessionNotesTransform(num_days=7)
         return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
     @reactive.calc
@@ -511,6 +518,21 @@ def server(input, output, session):
 
         )
         figWidget = go.FigureWidget(fig)
+
+        # register on_click event
+        def heatmap_on_click(trace, points, selector):
+            weekday = {'Mon':0, 'Tue':1, 'Wed':2, 'Thu':3, 'Fri':4, 'Sat':5, 'Sun':6}
+            mon_weeknum=points.xs[0][1].split(' ')
+            year = points.xs[0][0]
+            weekday_offset=weekday[points.ys[0]]
+            day=int(mon_weeknum[1])+weekday_offset
+            month=mon_weeknum[0]
+            # for query_date, xs=[[2024,'Oct 07']] and ys=[Thu].  Create reverse lookup for ys to get weekdqay number and offset 07 by that, then parse together datetime.
+            query_date=pd.to_datetime(f'{month} {day} {year}',format='%b %d %Y')
+            df_day = sessionNotesTransform(from_date=query_date, num_days=0)
+            print("Hello World")
+        
+        figWidget.data[0].on_click(heatmap_on_click)
         return figWidget
 
 app_dir = Path(__file__).parent
