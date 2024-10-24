@@ -233,6 +233,8 @@ def server(input, output, session):
         df_out = sessionNotesTransform(num_days=7)
         return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
+
+
     @reactive.calc
     def heatMapDataTranform():
         pd.set_option('future.no_silent_downcasting', True) # needed for fillna() commands below
@@ -519,17 +521,32 @@ def server(input, output, session):
         )
         figWidget = go.FigureWidget(fig)
 
+        df_day = reactive.value(pd.DataFrame())
+
+        @render.data_frame
+        def sessionNotesModalTable():
+            df_out = df_day()
+            return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
+
+
         # register on_click event
         def heatmap_on_click(trace, points, selector):
             weekday = {'Mon':0, 'Tue':1, 'Wed':2, 'Thu':3, 'Fri':4, 'Sat':5, 'Sun':6}
             mon_weeknum=points.xs[0][1].split(' ')
             year = points.xs[0][0]
             weekday_offset=weekday[points.ys[0]]
-            day=int(mon_weeknum[1])+weekday_offset
+            day=int(mon_weeknum[1]) # this is the beginning of the week
             month=mon_weeknum[0]
             # for query_date, xs=[[2024,'Oct 07']] and ys=[Thu].  Create reverse lookup for ys to get weekdqay number and offset 07 by that, then parse together datetime.
-            query_date=pd.to_datetime(f'{month} {day} {year}',format='%b %d %Y')
-            df_day = sessionNotesTransform(from_date=query_date, num_days=0)
+            query_date=pd.to_datetime(f'{month} {day} {year}',format='%b %d %Y')+pd.DateOffset(days=weekday_offset)
+            df_day.set(sessionNotesTransform(from_date=query_date, num_days=0).copy())
+            m = ui.modal(
+                ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
+                title="Session Data for [DATE]",
+                easy_close=True,
+                footer=None
+            )
+            ui.modal_show(m)
             print("Hello World")
         
         figWidget.data[0].on_click(heatmap_on_click)
