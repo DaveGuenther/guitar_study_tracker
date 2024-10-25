@@ -38,6 +38,7 @@ Light green: #008000
     color:#D9B7A1;
     color:#B8A372;
 
+    color:#2b180e;
     color:#40291D;
     color:#B2913C;
     color:#800020;
@@ -66,6 +67,8 @@ Light green: #008000
     color:#03A9F4;          
 
 }
+
+
 
 .bslib-gap-spacing{
     gap:0px;
@@ -169,3 +172,18 @@ h3, h6 {
     border-radius: 15px;
     top: calc(var(--_icon-size, 1rem)); /* makes toggle icon be evenly spaced from top as from right */
 }
+
+
+/* Styling for the entire Modal */
+.modal-content{
+    background-color: #2b180e;
+    border-style: double;
+    border-color: #D68A63;
+}
+
+.modal-header {
+    display: block;
+    text-align: center;
+    padding-bottom: 0;
+}
+

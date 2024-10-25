@@ -15,6 +15,7 @@ from shiny import App, ui, render, reactive, types, req, module
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from shinywidgets import output_widget, render_widget, render_plotly
+from shiny.types import ImgData
 
 # App Specific Code
 import orm # database models
@@ -135,8 +136,8 @@ app_ui = ui.page_fluid(
 
                     ),
                 ), 
-                ui.nav_panel("Career Repertoire",
-                    "Career Repretoire",
+                ui.nav_panel("Career",
+                    "Career",
                     ui.sidebar(
                         ui.h4("Filters"),
                         filter_shelf.filter_shelf(df_sessions),
@@ -178,7 +179,11 @@ app_ui = ui.page_fluid(
                 ), 
                 ui.nav_panel(
                     "Acoustic Arsenal",
-                    "Acoustic Arsenal"
+                    "Acoustic Arsenal",
+                    "-=Guitar=-",
+                    "-=Current Strings=-",
+                    "-=Strings Installed on=-",
+                    "-=Play Time on Strings=-",
 
                 ),
                 ui.nav_panel(
@@ -212,6 +217,26 @@ def server(input, output, session):
         df_filtered = df_365[(df_365['Song'].isin(input.song_title()))|(df_365['Song'].isna())]
         return df_filtered
 
+
+    ### These images (and corresponding click buttons and modals) need to be part of a shiny module!
+    @render.image
+    def video_image_70():
+        dir = Path(__file__).resolve().parent
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        return img
+
+    @render.image
+    def video_image_72():
+        dir = Path(__file__).resolve().parent
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        return img
+
+    @render.image
+    def video_image_71():
+        dir = Path(__file__).resolve().parent
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        return img    
+
     def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), num_days=7):
         """
         returns the session data table based on input parameters:
@@ -224,13 +249,16 @@ def server(input, output, session):
         df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
-        df_session_notes['Video Link'] = df_session_notes['Video URL'].apply(lambda row: ui.HTML(f'<a href="{row}" target="_blank">Video</a>') if row else row)
+        df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image_{int(row["id"])}', height='50px')) if row['Video URL'] else row['Video URL'], axis=1)
+        #df_session_notes['Video Link'] = df_session_notes['Video URL'].apply(lambda row: ui.HTML(f'<a href="{row}" target="_blank">Video</a>') if row else row)
+        #ui.output_image
         df_out = df_session_notes[['Song','Session Date','Notes','Duration', 'Video Link']].reset_index()
         return df_out.copy()
 
     @render.data_frame
     def sessionNotesTable():
         df_out = sessionNotesTransform(num_days=7)
+        df_out = df_out.drop('index',axis=1)
         return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
 
@@ -439,7 +467,11 @@ def server(input, output, session):
                 x=ret_dict['Week Names'],
                 y=ret_dict['Weekday Names'],
                 z=ret_dict['Daily Practice Durations Grid'],     
-                customdata=np.stack((ret_dict['customdata'][0], ret_dict['customdata'][1], ret_dict['customdata'][2]), axis=-1),
+                customdata=np.stack((
+                    ret_dict['customdata'][0], # datetimes
+                    ret_dict['customdata'][1], # Dates formatted as strings
+                    ret_dict['customdata'][2] # '*' character for those marks that have videos
+                    ), axis=-1),
                 
                 text=ret_dict['customdata'][2],
                 texttemplate="%{text}",
@@ -526,28 +558,32 @@ def server(input, output, session):
         @render.data_frame
         def sessionNotesModalTable():
             df_out = df_day()
+            df_out = df_out.drop(['index','Session Date'],axis=1)
             return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
 
         # register on_click event
         def heatmap_on_click(trace, points, selector):
-            weekday = {'Mon':0, 'Tue':1, 'Wed':2, 'Thu':3, 'Fri':4, 'Sat':5, 'Sun':6}
-            mon_weeknum=points.xs[0][1].split(' ')
-            year = points.xs[0][0]
-            weekday_offset=weekday[points.ys[0]]
-            day=int(mon_weeknum[1]) # this is the beginning of the week
-            month=mon_weeknum[0]
-            # for query_date, xs=[[2024,'Oct 07']] and ys=[Thu].  Create reverse lookup for ys to get weekdqay number and offset 07 by that, then parse together datetime.
-            query_date=pd.to_datetime(f'{month} {day} {year}',format='%b %d %Y')+pd.DateOffset(days=weekday_offset)
-            df_day.set(sessionNotesTransform(from_date=query_date, num_days=0).copy())
-            m = ui.modal(
-                ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
-                title="Session Data for [DATE]",
-                easy_close=True,
-                footer=None
-            )
-            ui.modal_show(m)
-            print("Hello World")
+
+            # Get the customdata that corresponds to the clicked trace
+            heatmap_y= points.point_inds[0][0]
+            heatmap_x= points.point_inds[0][1]
+            duration = trace.z[heatmap_y][heatmap_x]
+            if duration>0:
+                customdata = trace.customdata[heatmap_y,heatmap_x]
+                
+                query_date = customdata[0]
+                str_date = customdata[1]
+
+                df_day.set(sessionNotesTransform(from_date=query_date, num_days=0).copy())
+                m = ui.modal(
+                    ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
+                    title=f"Practice Session: {str_date}",
+                    easy_close=True,
+                    footer=None
+                )
+                ui.modal_show(m)
+                print("Hello World")
         
         figWidget.data[0].on_click(heatmap_on_click)
         return figWidget
