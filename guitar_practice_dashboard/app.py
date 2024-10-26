@@ -217,24 +217,61 @@ def server(input, output, session):
         df_filtered = df_365[(df_365['Song'].isin(input.song_title()))|(df_365['Song'].isna())]
         return df_filtered
 
+    @module.ui
+    def create_video_button():
+        return ui.div(ui.output_image(id=f'video_image', height='50px', click=True))
+
+
+    @module.server
+    def video_icon_server(input, output, session, url:str):
+        this_url = reactive.value(url)
+
+        
+        @render.image
+        def video_image():
+            dir = Path(__file__).resolve().parent
+            img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
+            return img
+        
+        @reactive.effect
+        @reactive.event(input.video_image_click)
+        def showModal():
+               
+            with reactive.isolate():
+                embed_url = this_url()
+                embed_url = embed_url[0:embed_url.find('?')]
+                embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
+                
+                m = ui.modal(
+                    ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
+                    easy_close=True,
+                    footer=None,
+                )
+            ui.modal_show(m)
+
+
 
     ### These images (and corresponding click buttons and modals) need to be part of a shiny module!
+
+
+    
+
     @render.image
     def video_image_70():
         dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
         return img
 
     @render.image
     def video_image_72():
         dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
         return img
 
     @render.image
     def video_image_71():
         dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"50px"}
+        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
         return img    
 
     def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), num_days=7):
@@ -249,7 +286,21 @@ def server(input, output, session):
         df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
-        df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image_{int(row["id"])}', height='50px')) if row['Video URL'] else row['Video URL'], axis=1)
+        
+        def vid_link_module(row):
+            if row['Video URL']:
+                ret_html = create_video_button(str(int(row['id'])))
+                video_icon_server(str(int(row['id'])),row['Video URL'])
+            else:
+                ret_html = row['Video URL']
+            return ret_html # return the HTML content for the video link cell
+            
+
+        df_session_notes['Video Link'] = df_session_notes.apply(lambda row: vid_link_module(row), axis=1)
+        
+        #df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image', height='50px', click=True)) if row['Video URL'] else row['Video URL'], axis=1)
+        
+        #df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image_{int(row["id"])}', height='50px')) if row['Video URL'] else row['Video URL'], axis=1)
         #df_session_notes['Video Link'] = df_session_notes['Video URL'].apply(lambda row: ui.HTML(f'<a href="{row}" target="_blank">Video</a>') if row else row)
         #ui.output_image
         df_out = df_session_notes[['Song','Session Date','Notes','Duration', 'Video Link']].reset_index()
