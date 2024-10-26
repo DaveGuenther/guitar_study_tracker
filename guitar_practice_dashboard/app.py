@@ -236,43 +236,23 @@ def server(input, output, session):
         @reactive.effect
         @reactive.event(input.video_image_click)
         def showModal():
-               
+            print("Showing Modal")
             with reactive.isolate():
                 embed_url = this_url()
-                embed_url = embed_url[0:embed_url.find('?')]
-                embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
-                
-                m = ui.modal(
-                    ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
-                    easy_close=True,
-                    footer=None,
-                )
+            embed_url = embed_url[0:embed_url.find('?')]
+            embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
+            
+            m = ui.modal(
+                ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
+                easy_close=True,
+                footer=None,
+            )
             ui.modal_show(m)
 
 
 
-    ### These images (and corresponding click buttons and modals) need to be part of a shiny module!
 
-
-    
-
-    @render.image
-    def video_image_70():
-        dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
-        return img
-
-    @render.image
-    def video_image_72():
-        dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
-        return img
-
-    @render.image
-    def video_image_71():
-        dir = Path(__file__).resolve().parent
-        img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
-        return img    
+   
 
     def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), num_days=7):
         """
@@ -627,13 +607,13 @@ def server(input, output, session):
                 str_date = customdata[1]
 
                 df_day.set(sessionNotesTransform(from_date=query_date, num_days=0).copy())
-                m = ui.modal(
+                i = ui.modal(
                     ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
                     title=f"Practice Session: {str_date}",
                     easy_close=True,
                     footer=None
                 )
-                ui.modal_show(m)
+                ui.modal_show(i)
                 print("Hello World")
         
         figWidget.data[0].on_click(heatmap_on_click)
