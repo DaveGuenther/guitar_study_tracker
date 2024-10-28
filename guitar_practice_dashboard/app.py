@@ -19,6 +19,8 @@ from shinywidgets import output_widget, render_widget, render_plotly
 from shiny.types import ImgData
 
 # App Specific Code
+import profiler
+Profiler = profiler.Profiler
 import orm # database models
 from database import DatabaseSession, DatabaseModel
 import data_prep
@@ -271,7 +273,7 @@ def server(input, output, session):
         @reactive.event(input.video_image_click)
         def showModal():
             print("entering showModal()")
-            prof_func(session.ns,'in',show_line_numbers=True)
+            Profiler(session.ns,show_line_numbers=True, call_offset=1)
             #with reactive.isolate():
 
             embed_url = url
@@ -664,4 +666,4 @@ def server(input, output, session):
         return figWidget
 
 app_dir = Path(__file__).parent
-app = App(app_ui, server, debug=True, static_assets=app_dir / "www")
+app = App(app_ui, server, debug=False, static_assets=app_dir / "www")
