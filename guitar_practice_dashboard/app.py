@@ -7,8 +7,9 @@ import os
 import datetime
 import pytz
 from dotenv import load_dotenv
+import inspect
 
-video_link="""<iframe width="560" height="315" src="https://www.youtube.com/embed/5xcqZiVpdy4?si=_Qak6xkMo-VblHun" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""
+#video_link="""<iframe width="560" height="315" src="https://www.youtube.com/embed/5xcqZiVpdy4?si=_Qak6xkMo-VblHun" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""
 
 # Web/Visual frameworks
 from shiny import App, ui, render, reactive, types, req, module
@@ -23,7 +24,37 @@ from database import DatabaseSession, DatabaseModel
 import data_prep
 import filter_shelf
 
+profiler=True
+def prof_func(namespace='', direction='in', show_line_numbers=False):
+    """
+    This function will echo out the name of the function it was called from as well as the namespace (for use with shiny server and module functions).  It will also show information about the parent call.
+    Place a call to this function at the beginning and end of each function you want to track.
+    
+    Parameters
 
+    namespace
+        (str): this is the value from session.ns if called within shiny server function
+
+    direction
+        (str): one of ['in','out'].  If 'in', this will show the function name and the calling function.  If 'out' it will just show the function name and namespace.
+
+    line_numbers
+        (bool): If True, this will add line number fo the parent call information.
+    """
+    callstack = inspect.stack()
+    offset=1
+    assert direction in ['in','out'], f'direction attribute must be "in" or "out", but got "{direction}".'
+    line_num_text=''
+    if show_line_numbers:
+        line_number = callstack[offset+1][2] # parent's calling line number
+        line_code = callstack[offset+1][4][0].strip() # parent's calling line of code
+        line_num_text= str(" -- line: "+str(line_number)+": "+line_code)
+    called_func_name = callstack[offset+0][3]
+    calling_func_name = callstack[offset+1][3]
+    if direction=='in':
+        print(f"namespace: {namespace} -- Entering {called_func_name} <- {calling_func_name} {line_num_text}")
+    else:
+        print(f"namespace: {namespace} -- Leaving {called_func_name}")
 
 #logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
@@ -224,21 +255,26 @@ def server(input, output, session):
 
     @module.server
     def video_icon_server(input, output, session, url:str):
+        print("entering video_icon_server()")
         this_url = reactive.value(url)
 
         
         @render.image
         def video_image():
+            print("entering video_image()")
             dir = Path(__file__).resolve().parent
             img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
+            print("exiting video_image()")
             return img
         
         @reactive.effect
         @reactive.event(input.video_image_click)
         def showModal():
-            print("Showing Modal")
-            with reactive.isolate():
-                embed_url = this_url()
+            print("entering showModal()")
+            prof_func(session.ns,'in',show_line_numbers=True)
+            #with reactive.isolate():
+
+            embed_url = url
             embed_url = embed_url[0:embed_url.find('?')]
             embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
             
@@ -248,6 +284,9 @@ def server(input, output, session):
                 footer=None,
             )
             ui.modal_show(m)
+            print("exiting showModal()")
+
+        print("exiting video_icon_server()")
 
 
 
@@ -268,11 +307,15 @@ def server(input, output, session):
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
         
         def vid_link_module(row):
+            print("entering vid_link_module()")
             if row['Video URL']:
+                print('Creating module with slug', str(int(row['id'])))
                 ret_html = create_video_button(str(int(row['id'])))
                 video_icon_server(str(int(row['id'])),row['Video URL'])
+                print('Created module with slug', str(int(row['id'])))
             else:
                 ret_html = row['Video URL']
+            print("exiting vid_link_module()")
             return ret_html # return the HTML content for the video link cell
             
 
@@ -595,6 +638,7 @@ def server(input, output, session):
 
         # register on_click event
         def heatmap_on_click(trace, points, selector):
+            print("Entering heatmap_on_click()")
 
             # Get the customdata that corresponds to the clicked trace
             heatmap_y= points.point_inds[0][0]
@@ -614,10 +658,10 @@ def server(input, output, session):
                     footer=None
                 )
                 ui.modal_show(i)
-                print("Hello World")
+            print("Exiting heatmap_on_click()")
         
         figWidget.data[0].on_click(heatmap_on_click)
         return figWidget
 
 app_dir = Path(__file__).parent
-app = App(app_ui, server, debug=False, static_assets=app_dir / "www")
+app = App(app_ui, server, debug=True, static_assets=app_dir / "www")
