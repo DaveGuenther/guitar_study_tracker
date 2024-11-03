@@ -19,46 +19,12 @@ from shinywidgets import output_widget, render_widget, render_plotly
 from shiny.types import ImgData
 
 # App Specific Code
-import profiler
-Profiler = profiler.Profiler
+import logger
+Logger = logger.FunctionLogger
 import orm # database models
 from database import DatabaseSession, DatabaseModel
 import data_prep
 import filter_shelf
-
-profiler=True
-def prof_func(namespace='', direction='in', show_line_numbers=False):
-    """
-    This function will echo out the name of the function it was called from as well as the namespace (for use with shiny server and module functions).  It will also show information about the parent call.
-    Place a call to this function at the beginning and end of each function you want to track.
-    
-    Parameters
-
-    namespace
-        (str): this is the value from session.ns if called within shiny server function
-
-    direction
-        (str): one of ['in','out'].  If 'in', this will show the function name and the calling function.  If 'out' it will just show the function name and namespace.
-
-    line_numbers
-        (bool): If True, this will add line number fo the parent call information.
-    """
-    callstack = inspect.stack()
-    offset=1
-    assert direction in ['in','out'], f'direction attribute must be "in" or "out", but got "{direction}".'
-    line_num_text=''
-    if show_line_numbers:
-        line_number = callstack[offset+1][2] # parent's calling line number
-        line_code = callstack[offset+1][4][0].strip() # parent's calling line of code
-        line_num_text= str(" -- line: "+str(line_number)+": "+line_code)
-    called_func_name = callstack[offset+0][3]
-    calling_func_name = callstack[offset+1][3]
-    if direction=='in':
-        print(f"namespace: {namespace} -- Entering {called_func_name} <- {calling_func_name} {line_num_text}")
-    else:
-        print(f"namespace: {namespace} -- Leaving {called_func_name}")
-
-#logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")
@@ -238,7 +204,7 @@ def table_calc_has_url(df_in):
     return pd.Series(ser_has_url, name='has_url')
 
 def server(input, output, session):
-    
+    Logger(session.ns)
     df_session_data = reactive.value(df_sessions)
 
     @reactive.calc
@@ -246,34 +212,35 @@ def server(input, output, session):
         '''
         This returns the df_sessions dataframe with only filter shelf filters applied (Stage 1).
         '''
+        Logger(session.ns)
         df_filtered = df_365
         df_filtered = df_365[(df_365['Song'].isin(input.song_title()))|(df_365['Song'].isna())]
         return df_filtered
 
     @module.ui
     def create_video_button():
+        Logger(session.ns)
         return ui.div(ui.output_image(id=f'video_image', height='50px', click=True))
 
 
     @module.server
     def video_icon_server(input, output, session, url:str):
+        Logger(session.ns)
         print("entering video_icon_server()")
         this_url = reactive.value(url)
 
         
         @render.image
         def video_image():
-            print("entering video_image()")
+            Logger(session.ns)
             dir = Path(__file__).resolve().parent
             img: ImgData = {"src":str(dir / "www/video_camera.svg"),"height":"30px"}
-            print("exiting video_image()")
             return img
         
         @reactive.effect
         @reactive.event(input.video_image_click)
         def showModal():
-            print("entering showModal()")
-            Profiler(session.ns,show_line_numbers=True, call_offset=1)
+            Logger(session.ns)
             #with reactive.isolate():
 
             embed_url = url
@@ -286,61 +253,70 @@ def server(input, output, session):
                 footer=None,
             )
             ui.modal_show(m)
-            print("exiting showModal()")
-
-        print("exiting video_icon_server()")
 
 
 
 
    
 
-    def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), num_days=7):
+    def sessionNotesTransform(from_date=(datetime.datetime.now(pytz.timezone('US/Eastern')).date()), 
+                              num_days=7):
         """
         returns the session data table based on input parameters:
         from_date (datetime.datetime): This is the date to start providing session data from
         num_days (int): number of days before from_date to incldue data in the session table.
+        namespace_slug (str): gets appended onto any modules that are created to track what widget they support.
         """
         #today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
+        Logger(session.ns)
         df_session_notes = df_sessions[(df_sessions['session_date']>=from_date-pd.DateOffset(days=num_days))&(df_sessions['session_date']<=pd.Timestamp(from_date))]
         df_session_notes = df_session_notes.sort_values('session_date')
         df_song_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
         df_session_notes = pd.merge(df_session_notes, df_song_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
         
+        df_out = df_session_notes[['id','Song','Session Date','Notes','Duration', 'Video URL']].reset_index()
+        return df_out.copy()
+
+    def add_URL_icon_to_session_table(df_in, namespace_slug=''):
+        """
+        This function establishes a reactive context!  Do not call from a non-reactive context unless you entend to make it reactive.
+        This function establishes shiny modules for each row that has a Video URL.  The input is a dataframe with a URL column, and the output will be a dataframe with a Video Link column that has HTML formatted ui and runs a server function in the background.
+        namespace_slug (str): gets appended onto any modules that are created to track what widget they support.
+        """
+        Logger(session.ns)
+
         def vid_link_module(row):
-            print("entering vid_link_module()")
+            #print("entering vid_link_module()")
+            Logger(session.ns)
+            namespace_id = namespace_slug+str(int(row['id']))
             if row['Video URL']:
                 print('Creating module with slug', str(int(row['id'])))
-                ret_html = create_video_button(str(int(row['id'])))
-                video_icon_server(str(int(row['id'])),row['Video URL'])
-                print('Created module with slug', str(int(row['id'])))
+                ret_html = create_video_button(namespace_id)
+                video_icon_server(namespace_id,row['Video URL'])
+                print('Created module with slug', namespace_id)
             else:
                 ret_html = row['Video URL']
-            print("exiting vid_link_module()")
+            #print("exiting vid_link_module()")
             return ret_html # return the HTML content for the video link cell
             
-
-        df_session_notes['Video Link'] = df_session_notes.apply(lambda row: vid_link_module(row), axis=1)
-        
-        #df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image', height='50px', click=True)) if row['Video URL'] else row['Video URL'], axis=1)
-        
-        #df_session_notes['Video Link'] = df_session_notes.apply(lambda row: ui.div(ui.output_image(id=f'video_image_{int(row["id"])}', height='50px')) if row['Video URL'] else row['Video URL'], axis=1)
-        #df_session_notes['Video Link'] = df_session_notes['Video URL'].apply(lambda row: ui.HTML(f'<a href="{row}" target="_blank">Video</a>') if row else row)
-        #ui.output_image
-        df_out = df_session_notes[['Song','Session Date','Notes','Duration', 'Video Link']].reset_index()
+        df_out = df_in
+        df_out['Video Link'] = df_out.apply(lambda row: vid_link_module(row), axis=1)
         return df_out.copy()
 
     @render.data_frame
     def sessionNotesTable():
+        Logger(session.ns)
         df_out = sessionNotesTransform(num_days=7)
-        df_out = df_out.drop('index',axis=1)
+        df_out = add_URL_icon_to_session_table(df_out,"sessionNotesTable")
+        df_out = df_out [['Song','Session Date','Notes','Duration',"Video Link"]]
         return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
 
 
     @reactive.calc
     def heatMapDataTranform():
+        Logger(session.ns)
         pd.set_option('future.no_silent_downcasting', True) # needed for fillna() commands below
         today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
         #prep for heatmap
@@ -400,6 +376,7 @@ def server(input, output, session):
 
     @reactive.calc
     def lastYearSongTransform():
+        Logger(session.ns)
         df_365 = df_365_stage_1()
         df_365 = df_365[df_365['Song'].notna()]
         df_365 = df_365.groupby(['Song Type','Song','Composer','Arranger'], as_index=False)['Duration'].sum()
@@ -411,6 +388,7 @@ def server(input, output, session):
 
     @render_widget
     def last_year_bar_chart():
+        Logger(session.ns)
         df_365_songs = lastYearSongTransform()
         num_bars = len(list(df_365_songs['Song']))
         custom_data = [
@@ -478,6 +456,7 @@ def server(input, output, session):
 
     @render_widget
     def last_week_bar_chart():
+        Logger(session.ns)
         df_last_week = sessionNotesTransform()
         df_bar_summary = df_last_week.groupby('Song',as_index=False)[['Duration']].sum()
         num_bars = len(list(df_bar_summary['Song']))
@@ -533,6 +512,7 @@ def server(input, output, session):
 
     @render_widget
     def waffle_chart():
+        Logger(session.ns)
         ret_dict = heatMapDataTranform()
         num_columns = len(ret_dict['Week Names'][0])
         print(num_columns)
@@ -633,13 +613,16 @@ def server(input, output, session):
 
         @render.data_frame
         def sessionNotesModalTable():
+            Logger(session.ns)
             df_out = df_day()
-            df_out = df_out.drop(['index','Session Date'],axis=1)
+            df_out = df_out.drop(['index','Session Date'],axis=1,errors='ignore')
+            df_out = df_out[['Song','Notes','Duration']]
             return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
 
         # register on_click event
         def heatmap_on_click(trace, points, selector):
+            Logger(session.ns)
             print("Entering heatmap_on_click()")
 
             # Get the customdata that corresponds to the clicked trace
@@ -652,14 +635,29 @@ def server(input, output, session):
                 query_date = customdata[0]
                 str_date = customdata[1]
 
-                df_day.set(sessionNotesTransform(from_date=query_date, num_days=0).copy())
+                df_day_session = sessionNotesTransform(from_date=query_date, num_days=0)
+                #df_day_session = add_URL_icon_to_session_table(df_day_session,"heatmap_on_click")
+                df_day_session = df_day_session[['Song','Session Date','Notes','Duration','Video URL']]
+                df_day.set(df_day_session.copy())
+                video_urls = df_day_session[df_day_session['Video URL'].notna()]['Video URL']
+
+                def format_as_iframe(url):
+                    embed_url = url
+                    embed_url = embed_url[0:embed_url.find('?')]
+                    embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
+                    return ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
+                
+
                 i = ui.modal(
-                    ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
+                    ui.row(
+                        [format_as_iframe(this_url) for this_url in video_urls],
+                        ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
+                    ),
                     title=f"Practice Session: {str_date}",
                     easy_close=True,
-                    footer=None
                 )
                 ui.modal_show(i)
+                
             print("Exiting heatmap_on_click()")
         
         figWidget.data[0].on_click(heatmap_on_click)
