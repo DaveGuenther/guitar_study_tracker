@@ -3,7 +3,7 @@ import inspect
 # Global variable that turns the profile on or off.  It isn't currently used
 use_profiler=True
 
-class LogCounter:
+class LogManager:
     """
     You shouldn't have to instantiate this class directly.  It is instantiated by the FunctionLogger class
     This is a singleton intended to keep track of the number of times the FunctionLogger class is instantiated.  If your application has FunctionLogger calls from multiple files, they will each be aware of the universal count through this class.
@@ -12,21 +12,28 @@ class LogCounter:
     # used for singleton pattern
     _instance=None
     _profiler_counter=0
+    _is_logger_on=True
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(LogCounter, cls).__new__(cls)
+            cls._instance = super(LogManager, cls).__new__(cls)
         return cls._instance
 
     def __init__(self):
         pass
 
-    def get(self):
+    def get_counter(self):
         return self._profiler_counter
     
-    def increment(self):
+    def increment_counter(self):
         self._profiler_counter+=1
-        
+
+    def set_is_logger_on(self, logger_value):
+        self._is_logger_on=logger_value
+
+    def get_is_logger_on(self):
+        return self._is_logger_on
+
 class FunctionLogger():
 
     # rest of profiler data
@@ -69,16 +76,30 @@ class FunctionLogger():
                 # additional function logic here
         
         """
-        log_counter=LogCounter()
-        log_counter.increment()
-        self.__log_id = log_counter.get()
-        self.__namespace=namespace
-        self.__show_line_numbers = show_line_numbers
-        self.__callstack = inspect.stack()
-        self.__call_offset = call_offset
-        self.__customdata = customdata
-        self.profile_func('in')
+        if FunctionLogger.isLoggerOn():
+            #__concrete_init__(self, namespace='', customdata={}, show_line_numbers=True, call_offset=1)
+            log_counter=LogManager()
+            
+            log_counter.increment_counter()
+            self.__log_id = log_counter.get_counter()
+            self.__namespace=namespace
+            self.__show_line_numbers = show_line_numbers
+            self.__callstack = inspect.stack()
+            self.__call_offset = call_offset
+            self.__customdata = customdata
+            self.profile_func('in')
 
+
+    def isLoggerOn():
+        log_mgr = LogManager()
+        return log_mgr.get_is_logger_on()
+    
+    def setLogger(toggle_value:bool):
+        """
+        Use this to turn the logger on or off.  toggle_value=True turns logger on.  toggle_value=False turns logger off.
+        """
+        log_mgr = LogManager()
+        log_mgr.set_is_logger_on(toggle_value)
 
     def profile_func(self, direction="in"):    
         """
@@ -119,4 +140,5 @@ class FunctionLogger():
         """
         This runs automatically when the program counter exits the scope of the function this object was created in.  It displays an exit message.
         """
-        self.profile_func("out")
+        if FunctionLogger.isLoggerOn():
+            self.profile_func("out")

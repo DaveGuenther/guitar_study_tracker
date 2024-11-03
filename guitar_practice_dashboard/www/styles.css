@@ -81,6 +81,7 @@ Light green: #008000
 /* This doesn't do anything */
 .shiny-data-grid.shiny-data-grid-table {
     border-top: none !important;
+    height:100% !important;
 }
 
 /* This doesn't do anything */
@@ -92,15 +93,23 @@ Light green: #008000
     background-color: #160d08;
 }
 
+/* make it so that datagrids shink below 250px height if there isn't enough content */
+.shiny-data-frame .shiny-data-grid.shiny-data-grid-table{
+    height:100%;
+    max-height:250px;
+}
+
 thead, th{
-    background-color: #160d08 !important;
+    background-color: #45220d !important;
     border: 0px !important;
     color: #dbcaa4 !important;
 }
 
 .dashboard-table{
     background-color: #dbcaa4 !important;
-    border-top: 0px !important; /* This doesn't do anything */
+    /*border-top: 0px !important; /* This doesn't do anything */
+    padding: unset;
+    margin-top:5px;
 }
 
 .dashboard-card{
@@ -181,9 +190,40 @@ h3, h6 {
     border-color: #D68A63;
 }
 
+
 .modal-header {
     display: block;
     text-align: center;
     padding-bottom: 0;
 }
+
+
+.modal-titlebar {
+    height:30px;
+    display: flex;
+    flex-direction: row;
+    border-bottom:10px;
+}
+
+.modal-title-text {
+    flex: 1 0 auto;
+}
+
+.modal-titlebar .modal-close {
+    /*width:30px;*/
+    --bs-btn-color: #dbcaa4;
+    --bs-btn-border-color: #dbcaa4;
+    --bs-btn-bg: #922b0c;
+    padding-left:8px;
+    padding-bottom:8px;
+    padding-right:5px;
+    padding-top:5px;
+
+}
+
+.day-modal-video {
+    padding-top:10px;
+}
+/*color: #dbcaa4;
+background-color: #922b0c;*/
 

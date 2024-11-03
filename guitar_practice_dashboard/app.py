@@ -17,6 +17,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from shinywidgets import output_widget, render_widget, render_plotly
 from shiny.types import ImgData
+from faicons import icon_svg
 
 # App Specific Code
 import logger
@@ -25,6 +26,8 @@ import orm # database models
 from database import DatabaseSession, DatabaseModel
 import data_prep
 import filter_shelf
+
+Logger.setLogger(False) # turn off the shinylogger
 
 # pull database location and credential information from env variables
 load_dotenv("variables.env")
@@ -93,9 +96,9 @@ app_ui = ui.page_fluid(
                             ui.column(6,
                                 ui.div(
                                     ui.card(
-                                        ui.h3("Practice Session Notes (Past Week)").add_style("color:#Ff9b15;"),
+                                        ui.h3("Practice Session Notes (Past Week)"),#.add_style("color:#Ff9b15;"),
                                         output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
-                                        ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table'),
+                                        ui.div(ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table')).add_style('max-height:200px; overflow-y: clip; display: flex;'),
                                         ui.div("",class_='blank-fill-container'),
                                         class_="dashboard-card",
                                     ),
@@ -310,7 +313,7 @@ def server(input, output, session):
         df_out = sessionNotesTransform(num_days=7)
         df_out = add_URL_icon_to_session_table(df_out,"sessionNotesTable")
         df_out = df_out [['Song','Session Date','Notes','Duration',"Video Link"]]
-        return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
+        return render.DataTable(df_out, width="100%", styles=[{'class':'dashboard-table'}])
 
 
 
@@ -639,22 +642,27 @@ def server(input, output, session):
                 #df_day_session = add_URL_icon_to_session_table(df_day_session,"heatmap_on_click")
                 df_day_session = df_day_session[['Song','Session Date','Notes','Duration','Video URL']]
                 df_day.set(df_day_session.copy())
-                video_urls = df_day_session[df_day_session['Video URL'].notna()]['Video URL']
-
+                video_urls = df_day_session['Video URL'].replace('',None).copy()
+                video_urls = video_urls[video_urls.notna()]
+  
                 def format_as_iframe(url):
                     embed_url = url
                     embed_url = embed_url[0:embed_url.find('?')]
                     embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
-                    return ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
-                
-
+                    return ui.div(ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>""")).add_class("day-modal-video"),
+    
                 i = ui.modal(
+                    ui.div(
+                        ui.h3(f"Practice Session: {str_date}").add_class("modal-title-text"),
+                        ui.modal_button(label=None, icon=icon_svg("x")).add_class("modal-close", prepend=True), #you don't need to add the 'fa-' in front of the icon name
+                    ).add_class("modal-titlebar"),
                     ui.row(
+                        ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table', prepend=True),
                         [format_as_iframe(this_url) for this_url in video_urls],
-                        ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table'),
-                    ),
-                    title=f"Practice Session: {str_date}",
+                        ),
+                    #title=f"Practice Session: {str_date}",
                     easy_close=True,
+                    footer=None,
                 )
                 ui.modal_show(i)
                 
