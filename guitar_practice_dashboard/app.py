@@ -227,10 +227,10 @@ def server(input, output, session):
 
 
     @module.server
-    def video_icon_server(input, output, session, url:str):
+    def video_icon_server(input, output, session, url:str, title:str):
         Logger(session.ns)
         print("entering video_icon_server()")
-        this_url = reactive.value(url)
+        #this_url = reactive.value(url)
 
         
         @render.image
@@ -251,8 +251,12 @@ def server(input, output, session):
             embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
             
             m = ui.modal(
+                ui.div(
+                    ui.h3(title).add_class("modal-title-text"),
+                    ui.modal_button(label=None, icon=icon_svg("x")).add_class("modal-close", prepend=True), #you don't need to add the 'fa-' in front of the icon name
+                ).add_class("modal-titlebar"),
                 ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
-                easy_close=True,
+                easy_close=False,
                 footer=None,
             )
             ui.modal_show(m)
@@ -296,7 +300,8 @@ def server(input, output, session):
             if row['Video URL']:
                 print('Creating module with slug', str(int(row['id'])))
                 ret_html = create_video_button(namespace_id)
-                video_icon_server(namespace_id,row['Video URL'])
+                video_title=str(row['Session Date']+" - "+row['Song'])
+                video_icon_server(namespace_id,row['Video URL'], video_title)
                 print('Created module with slug', namespace_id)
             else:
                 ret_html = row['Video URL']
@@ -660,8 +665,7 @@ def server(input, output, session):
                         ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table', prepend=True),
                         [format_as_iframe(this_url) for this_url in video_urls],
                         ),
-                    #title=f"Practice Session: {str_date}",
-                    easy_close=True,
+                    easy_close=False,
                     footer=None,
                 )
                 ui.modal_show(i)
