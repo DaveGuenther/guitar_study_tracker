@@ -20,7 +20,6 @@ def tab_session(df_365):
                 choices={key:value for key,value in zip(songs, songs)},
                 selected=[key for key in songs],
             ),
-            #ui.input_select(id='song_title',label="Song Title",choices=list(df_sessions['Song'].unique()),selected=list(df_sessions['Song'].unique()),multiple=True)
         )
         return ret_val
 
@@ -38,20 +37,20 @@ def tab_session(df_365):
                 ).add_style('width:1750px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                 ui.div("* Indicates that a video recording was made that day.").add_style("text-align:right;"),
                 class_="dashboard-card",
-            ),
+            ).add_style("height:352px;"),
         
             ui.row(
 
                 ui.column(6,
                     ui.div(
                         ui.card(
-                            ui.h3("Practice Session Notes (Past Week)"),#.add_style("color:#Ff9b15;"),
-                            output_widget(id='last_week_bar_chart').add_style('height:200px; overflow-y: auto; display: flex;'),
+                            ui.h3("Practice Session Notes (Past Week)"),
+                            ui.div(output_widget(id='last_week_bar_chart')).add_style('max-height:200px; overflow-y: auto; display: flex;'),
                             ui.div(ui.output_data_frame(id="sessionNotesTable").add_class('dashboard-table')).add_style('max-height:200px; overflow-y: clip; display: flex;'),
                             ui.div("",class_='blank-fill-container'),
                             class_="dashboard-card",
                         ),
-                    ),
+                    ).add_class('flex-vertical'),
                 ).add_style("padding-right:6px;"),
 
                 ui.column(6,

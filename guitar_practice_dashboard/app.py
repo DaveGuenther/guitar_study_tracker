@@ -110,7 +110,7 @@ def server(input, output, session):
     @module.ui
     def create_video_button():
         Logger(session.ns)
-        return ui.div(ui.output_image(id=f'video_image', height='50px', click=True))
+        return ui.div(ui.output_image(id=f'video_image', height='50px', click=True).add_style('cursor:pointer;'))
 
 
     @module.server
@@ -142,7 +142,7 @@ def server(input, output, session):
                     ui.h3(title).add_class("modal-title-text"),
                     ui.modal_button(label=None, icon=icon_svg("x")).add_class("modal-close", prepend=True), #you don't need to add the 'fa-' in front of the icon name
                 ).add_class("modal-titlebar"),
-                ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
+                ui.HTML(f"""<iframe src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>"""),
                 easy_close=False,
                 footer=None,
             )
@@ -541,19 +541,26 @@ def server(input, output, session):
                     embed_url = url
                     embed_url = embed_url[0:embed_url.find('?')]
                     embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
-                    return ui.div(ui.HTML(f"""<iframe width="434" height="245" src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>""")).add_class("day-modal-video"),
+                    return ui.div(ui.HTML(f"""<iframe src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>""")).add_class("day-modal-video"),
     
                 i = ui.modal(
-                    ui.div(
-                        ui.h3(f"Practice Session: {str_date}").add_class("modal-title-text"),
-                        ui.modal_button(label=None, icon=icon_svg("x")).add_class("modal-close", prepend=True), #you don't need to add the 'fa-' in front of the icon name
-                    ).add_class("modal-titlebar"),
                     ui.row(
-                        ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table', prepend=True),
-                        [format_as_iframe(this_url) for this_url in video_urls],
+                        ui.div(
+                            ui.h3(f"Practice Session: {str_date}").add_class("modal-title-text"),
+                            ui.modal_button(label=None, icon=icon_svg("x")).add_class("modal-close", prepend=True), #you don't need to add the 'fa-' in front of the icon name
+                        ).add_class("modal-titlebar"),
+                        ui.row(
+                            ui.div(
+                                ui.output_data_frame(id="sessionNotesModalTable").add_class('dashboard-table', prepend=True),
+                            ).add_style("max-height:225px; overflow-y:auto;"),
+                            ui.div(
+                                [format_as_iframe(this_url) for this_url in video_urls],
+                            ).add_style("max-height:275px; overflow-y:auto;"),
                         ),
+                    ).add_style('max-height:575px; overflow-y:clip;'),
                     easy_close=False,
                     footer=None,
+                    
                 )
                 ui.modal_show(i)
                 

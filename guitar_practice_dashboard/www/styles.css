@@ -201,7 +201,7 @@ h3, h6 {
 }
 
 .modal-title-text {
-    flex: 1 0 auto;
+    flex: 1 1 auto;
 }
 
 .modal-titlebar .modal-close {
@@ -220,4 +220,10 @@ h3, h6 {
     padding-top:10px;
 }
 
+
+iframe {
+    aspect-ratio: 16 / 9;
+    width: 100%; /* change this to a fixed width, or create a container with a width. */
+    height: 100%;
+  }
 
