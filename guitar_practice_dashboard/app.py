@@ -56,7 +56,9 @@ df_sessions, df_365 = data_prep.processData(session_model, song_model, artist_mo
 
 
 app_ui = ui.page_fluid(
-        ui.HTML('<meta property="og:image" content="rosette-whole-small-min.png" />'),
+        ui.head_content(
+            ui.tags.meta(property="og:image", content="https://i.imgur.com/Gep8lXT.png"),
+        ),
         ui.tags.link(href='styles.css', rel="stylesheet"),
         ui.tags.link(href='flex.css', rel="stylesheet"),
         ui.div(
