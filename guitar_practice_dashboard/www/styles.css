@@ -194,7 +194,7 @@ h3, h6 {
 
 
 .modal-titlebar {
-    height:30px;
+    min-height:30px;
     display: flex;
     flex-direction: row;
     margin-bottom:10px;
@@ -206,6 +206,7 @@ h3, h6 {
 
 .modal-titlebar .modal-close {
     /*width:30px;*/
+    max-height:30px;
     --bs-btn-color: #dbcaa4;
     --bs-btn-border-color: #dbcaa4;
     --bs-btn-bg: #922b0c;
