@@ -57,3 +57,18 @@ tbl_practice_session = Table(
     Column('l_song_id', Integer, nullable=True), # foreign key to song.id
     schema=schema,
 )
+
+tbl_guitar = Table(
+    'guitar',
+    metadata,
+    Column('id', Integer, nullable=False),
+    Column('make', Text, nullable=False),
+    Column('model', Text, nullable=False),
+    Column('status', Text, nullable=False), # Temporary, Permanent, or Retired
+    Column('about', Text, nullable=False),
+    Column('image_link', Integer, nullable=True),
+    Column('date_added', Date, nullable=True),
+    Column('string_set_id', Integer, nullable=False),
+    Column('date_retired', Date, nullable=True),
+    schema=schema,
+)
