@@ -10,9 +10,7 @@ import data_prep
 
 class GlobalData:
     """
-    You shouldn't have to instantiate this class directly.  It is instantiated by the FunctionLogger class
-    This is a singleton intended to keep track of the number of times the FunctionLogger class is instantiated.  If your application has FunctionLogger calls from multiple files, they will each be aware of the universal count through this class.
-    
+    This is a singleton class intended to keep track of global non-reactive data that will be used by all the modules.
     """
     # used for singleton pattern
     _instance=None

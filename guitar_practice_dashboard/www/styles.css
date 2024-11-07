@@ -228,3 +228,17 @@ iframe {
     height: 100%;
   }
 
+/*### Acoustic Arsenal ###*/
+/*Guitar Shelf Cards*/
+.guitar-card {
+    background-color: #000000 !important;
+    color: #FFF8DC;
+    flex: 1 1 auto;
+    aspect-ratio: 0.55;
+    min-width: 350px;
+    max-width: 550px;
+}
+
+.guitar-card-image {
+    object-fit:fill;
+}
