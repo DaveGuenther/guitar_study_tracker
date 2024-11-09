@@ -509,8 +509,8 @@ class SongGoalInputTableModel(ShinyInputTableModel):
 
     # We want the lookup control for songs on the form to show all songs on the songs table that aren't already on the goal songs table.
     # However, when we update an existing goal song record, we also want to add that song id to the song lookup table for that instance of the modal so that is isn't blank when we click Update on the record.
-    __song_lookup=None  # Gets populated during _ui_specific_code() so that it can have dynamic values for Update records
-    __df_resolved_song=None # used to add a selected id to the song lookup table when a user clicks on update
+    __song_lookup={}  # Gets populated during _ui_specific_code() so that it can have dynamic values for Update records
+    __df_resolved_song=pd.DataFrame() # used to add a selected id to the song lookup table when a user clicks on update
 
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel):
         self._namespace_id=namespace_id
@@ -529,11 +529,14 @@ class SongGoalInputTableModel(ShinyInputTableModel):
         df_raw_song['arranger'] = df_raw_song['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
         df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
         df_resolved_song = df_resolved_song.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
-        self.__df_resolved_song=df_resolved_song
-        df_resolved_song_goal = df_resolved_song.merge(df_raw_song_goal, left_on='id', right_on='song_id', how='right').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
-        
+        self.__df_resolved_song=df_resolved_song.copy()
+        df_resolved_song_goal = df_raw_song_goal.merge(df_resolved_song, how='left', left_on='song_id', right_on='id').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
+        #df_resolved_song_goal = df_resolved_song.merge(df_raw_song_goal, left_on='id', right_on='song_id', how='right').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
+        df_resolved_song['Start Date'] = pd.to_datetime(df_resolved_song['start_date']).dt.strftime("%m/%d/%Y")
+
         # Build rendered dataframe for the table navigator
         df_summary = df_resolved_song_goal.rename({'title':'Title', 'song_type':'Song Type','description':'Description','discovery_date':'Date Discovered'},axis=1).sort_values(['Date Discovered'], ascending=False)
+        df_summary['Date Discovered'] = pd.to_datetime(df_summary['Date Discovered']).dt.strftime("%m/%d/%Y")
         self.df_summary = df_summary[['id','Title','Composer','Arranger','Date Discovered','Description']]
 
 
@@ -549,7 +552,7 @@ class SongGoalInputTableModel(ShinyInputTableModel):
     def __init_description(self):
         # provide initial value for the description field of the input form
         if self._df_selected_id:
-            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['description'].values[0])
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['description'].values[0])
         else:
             # User selected New
             return None     
@@ -558,7 +561,7 @@ class SongGoalInputTableModel(ShinyInputTableModel):
         # provide initial value for the song lookup field of the input form
         if self._df_selected_id: 
             # User selected Update
-            song_id = self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['song_id'].values[0]
+            song_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['song_id'].values[0]
             if pd.isna(song_id):
                 return '' # Update a record with a null song id
 
@@ -575,7 +578,7 @@ class SongGoalInputTableModel(ShinyInputTableModel):
         # provide initial value for the discovery_date on the input form
         if self._df_selected_id:
             # User selected Update
-            discovery_date = self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['discovery_date'].values[0]
+            discovery_date = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['discovery_date'].values[0]
             if discovery_date:
                 return discovery_date
             else:
@@ -586,16 +589,20 @@ class SongGoalInputTableModel(ShinyInputTableModel):
          
     def _ui_specific_code(self):
         """
-        Song Goal Modal Form UI code goes here
+        Song Goal Modal Form UI code goes here.
         """
-        print("Hello World")
-        self.__song_lookup=self.__new_song_lookup # Lookup song control contains only songs that aren't on the gosl song table.
+        ###  This function is called from the Parent Abstract Class ShinyInputTableModel.  In order to addess private members from this child class, instead of using self.__value, we have to 
+        ###  deliberately access the child's provate data from the parent class: self._SongGoalInputTableModel__value.  I'm not exactly sure why, but python isn't able to resolve self.__value
+        ###  in this function when it is called from the parent class.
+        df_resolved_song = self._SongGoalInputTableModel__df_resolved_song # pseudonym for self.__df_resolved_song.
+        self._SongGoalInputTableModel__song_lookup=self._SongGoalInputTableModel__new_song_lookup # pesudonym for self.__new_song_lookup.  Lookup song control contains only songs that aren't on the gosl song table.
         if self._df_selected_id:
             # Add a record to the lookup song control for the selected song_id so that it shows when a form is updated
-            composer=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['Composer'].values[0]
-            arranger=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['Arranger'].values[0]
-            title=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['title'].values[0]
-            self.__song_lookup.update({int(self._df_selected_id):str("Composer: "+str(composer)+", Song: "+str(title)+', Arranger: '+str(arranger))})
+            song_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['song_id'].values[0]
+            composer=df_resolved_song[df_resolved_song['id']==song_id]['Composer'].values[0]
+            arranger=df_resolved_song[df_resolved_song['id']==song_id]['Arranger'].values[0]
+            title=df_resolved_song[df_resolved_song['id']==song_id]['title'].values[0]
+            self._SongGoalInputTableModel__song_lookup.update({int(song_id):str("Composer: "+str(composer)+", Song: "+str(title)+', Arranger: '+str(arranger))})
             
 
         return ui.row(
@@ -623,7 +630,7 @@ class SongGoalInputTableModel(ShinyInputTableModel):
                 # Create single row as dataframe
                 df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
                                                    'song_id':[song_id], # REQUIRED VALUE
-                                                   'composer':[input.composer()],
+                                                   'description':[input.description()],
                                                    'discovery_date':[input.discovery_date()]})
                 #print(df_row_to_database.to_string())
                 if self._df_selected_id:

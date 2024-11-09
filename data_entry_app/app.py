@@ -114,7 +114,6 @@ def server(input, output, session):
 
 
 
-
         # connect to database
         string_set_model.connect(user_name, pw, read_only_acct)
         artist_model.connect(user_name, pw, read_only_acct)
