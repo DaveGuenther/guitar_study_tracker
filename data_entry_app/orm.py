@@ -55,6 +55,7 @@ tbl_practice_session = Table(
     Column('notes', Text, nullable=True),
     Column('video_url', Text, nullable=True),
     Column('l_song_id', Integer, nullable=True), # foreign key to song.id
+    Column('guitar_id', Integer, nullable=False), # foreign key to guitar.id
     schema=schema,
 )
 
@@ -68,7 +69,27 @@ tbl_guitar = Table(
     Column('about', Text, nullable=False),
     Column('image_link', Integer, nullable=True),
     Column('date_added', Date, nullable=True),
-    Column('string_set_id', Integer, nullable=False),
+    Column('string_set_id', Integer, nullable=False), # foreign key to string_set.id
     Column('date_retired', Date, nullable=True),
+    schema=schema,
+)
+
+tbl_song_goals = Table(
+    'song_goals',
+    metadata,
+    Column('id', Integer, nullable=False),
+    Column('song_id', Integer, nullable=False), # foreign key to song.id
+    Column('description', Text, nullable=True),
+    Column('discovery_date', Date, nullable=False),
+    schema=schema,
+)
+
+tbl_string_set = Table(
+    'string_set',
+    metadata,
+    Column('id', Integer, nullable=False),
+    Column('name', Text, nullable = False),
+    Column('hyperlink', Text, nullable=True),
+    Column('image_url', Text, nullable=True),
     schema=schema,
 )

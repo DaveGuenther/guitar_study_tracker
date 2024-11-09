@@ -19,7 +19,7 @@ class ShinyInputTableModel(ABC):
     _db_table_model=None # This object manages read/write access to the specific table itself (database model)
     df_summary=None # used to store the summarized view (with appropriate lookups resolved) that is provided to thje table navigator
     _df_selected_id = None # This is the selected row passed in from the table navigator
-
+    _input_form_modal = None # This is the input form modal's id.  We use this to close the modal in the concrete class definitions
     @abstractmethod
     def processData():
         """
@@ -41,7 +41,7 @@ class ShinyInputTableModel(ABC):
         self._df_selected_id = df_selected_id
         @module.ui
         def ui_modal():
-            input_form_modal = ui.modal(
+            self._input_form_modal = ui.modal(
                 self._ui_specific_code(),
                 ui.row(
                     ui.column(4, ui.input_action_button("btn_input_cancel","Cancel",width="100%")),
@@ -52,7 +52,7 @@ class ShinyInputTableModel(ABC):
                 easy_close=True,
                 footer=None,
             )
-            return ui.modal_show(input_form_modal)
+            return ui.modal_show(self._input_form_modal)
 
         return ui_modal(self._namespace_id)
 
@@ -127,6 +127,87 @@ class ArtistInputTableModel(ShinyInputTableModel):
             return self.df_summary.copy
 
         return input_form_func(self._namespace_id, summary_df)
+
+
+class StringSetInputTableModel(ShinyInputTableModel):    
+
+    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel):
+        self._namespace_id=namespace_id
+        self._title=title
+        self._db_table_model=db_table_model
+
+    def processData(self):
+        self._db_table_model.df_raw = self._db_table_model.df_raw.sort_values('name')
+        self.df_summary = self._db_table_model.df_raw.rename({'name':'Name', 'hyperlink':'Hyperlink'},axis=1).copy()
+
+    def __init_name(self):
+        if self._df_selected_id:
+            # provide initial value for the name field of the input form
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['name'].values[0])
+        else:
+            return None
+
+    def __init_hyperlink(self):
+        if self._df_selected_id:
+            # provide initial value for the name field of the input form
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['hyperlink'].values[0])
+        else:
+            return None
+
+    def __init_image_url(self):
+        if self._df_selected_id:
+            # provide initial value for the name field of the input form
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['image_url'].values[0])
+        else:
+            return None        
+
+    def _ui_specific_code(self):
+        """
+        String Set Modal Form UI code goes here
+        """
+        return ui.row(
+            ui.div(self._init_id_text()),
+            ui.input_text(id="name",label=f"{self._title} Name *", value=self.__init_name()).add_style('color:red;'), #REQUIRED VALUE
+            ui.input_text(id="hyperlink",label=f"{self._title} Hyperlink", value=self.__init_hyperlink()),
+            ui.input_text(id="image_url",label=f"{self._title} Image URL", value=self.__init_image_url()),
+        ),
+
+    def server_call(self, input, output, session, summary_df):
+        """
+        Artist Modal Form Server code goes here
+        """
+
+        @module.server
+        def input_form_func(input, output, session, summary_df):
+
+            output_name = reactive.value('')
+            
+            @reactive.effect
+            @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
+            def triggerInputFormSubmit():
+                # Create single row as dataframe
+                df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
+                                                   'name':[input.name()],
+                                                   'hyperlink':[input.hyperlink()],
+                                                   'image_url':[input.image_url()]})
+                if self._df_selected_id:
+                    self._db_table_model.update(df_row_to_database)
+                else:
+                    self._db_table_model.insert(df_row_to_database)
+                
+                ui.modal_remove()
+                self.processData()
+                summary_df.set(self.df_summary)
+           
+            @reactive.effect
+            @reactive.event(input.btn_input_cancel)
+            def triggerInputCancel():
+                ui.modal_remove()
+
+            return self.df_summary.copy
+
+        return input_form_func(self._namespace_id, summary_df)
+
 
 class StyleInputTableModel(ShinyInputTableModel):    
 
@@ -421,11 +502,156 @@ class SongInputTableModel(ShinyInputTableModel):
         return input_form_func(self._namespace_id, summary_df)
 
 
+class SongGoalInputTableModel(ShinyInputTableModel):    
+
+    __db_song_model=None
+    __db_artist_model=None
+
+    # We want the lookup control for songs on the form to show all songs on the songs table that aren't already on the goal songs table.
+    # However, when we update an existing goal song record, we also want to add that song id to the song lookup table for that instance of the modal so that is isn't blank when we click Update on the record.
+    __song_lookup=None  # Gets populated during _ui_specific_code() so that it can have dynamic values for Update records
+    __df_resolved_song=None # used to add a selected id to the song lookup table when a user clicks on update
+
+    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel):
+        self._namespace_id=namespace_id
+        self._title=title
+        self._db_table_model=db_table_model
+        self.__db_song_model = db_song_model
+        self.__db_artist_model = db_artist_model
+
+    def processData(self):
+        # There is more complex logic required to process the Song dataframe because it has the artist lookup field to worry about
+        df_raw_song_goal = self._db_table_model.df_raw
+        df_raw_artist = self.__db_artist_model.df_raw
+        df_raw_song = self.__db_song_model.df_raw
+        
+        df_raw_song['composer'] = df_raw_song['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_raw_song['arranger'] = df_raw_song['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
+        df_resolved_song = df_resolved_song.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        self.__df_resolved_song=df_resolved_song
+        df_resolved_song_goal = df_resolved_song.merge(df_raw_song_goal, left_on='id', right_on='song_id', how='right').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
+        
+        # Build rendered dataframe for the table navigator
+        df_summary = df_resolved_song_goal.rename({'title':'Title', 'song_type':'Song Type','description':'Description','discovery_date':'Date Discovered'},axis=1).sort_values(['Date Discovered'], ascending=False)
+        self.df_summary = df_summary[['id','Title','Composer','Arranger','Date Discovered','Description']]
+
+
+        # Establish song lookup for the song goals table
+        song_ids_on_goals_table = df_resolved_song_goal['song_id']
+        df_song_lookup = df_resolved_song[~df_resolved_song['id'].isin(song_ids_on_goals_table)] # Songs from the song table can only be added once to the goal table
+        self.__new_song_lookup = {'':''}
+        self.__new_song_lookup.update({value:str("Composer: "+str(composer)+", Song: "+str(title)+', Arranger: '+str(arranger)) for value,composer,arranger,title in zip(df_song_lookup['id'],df_song_lookup['Composer'],df_song_lookup['Arranger'],df_song_lookup['title'])})   
+
+
+        
+
+    def __init_description(self):
+        # provide initial value for the description field of the input form
+        if self._df_selected_id:
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['description'].values[0])
+        else:
+            # User selected New
+            return None     
+
+    def __init_song(self):
+        # provide initial value for the song lookup field of the input form
+        if self._df_selected_id: 
+            # User selected Update
+            song_id = self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['song_id'].values[0]
+            if pd.isna(song_id):
+                return '' # Update a record with a null song id
+
+            else:
+                if (not math.isnan(song_id)):
+                    return int(song_id) # Update a record with a non-null song selection
+                '' # Update a record with a null song id
+        else:
+            # User selected New
+            return '' # New Record, there is no value   
+  
+       
+    def __init_discovery_date(self):
+        # provide initial value for the discovery_date on the input form
+        if self._df_selected_id:
+            # User selected Update
+            discovery_date = self._db_table_model.df_raw[self._db_table_model.df_raw['song_id']==self._df_selected_id]['discovery_date'].values[0]
+            if discovery_date:
+                return discovery_date
+            else:
+                return pd.NaT
+            # User selected New
+        else:
+            return pd.NaT      
+         
+    def _ui_specific_code(self):
+        """
+        Song Goal Modal Form UI code goes here
+        """
+        print("Hello World")
+        self.__song_lookup=self.__new_song_lookup # Lookup song control contains only songs that aren't on the gosl song table.
+        if self._df_selected_id:
+            # Add a record to the lookup song control for the selected song_id so that it shows when a form is updated
+            composer=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['Composer'].values[0]
+            arranger=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['Arranger'].values[0]
+            title=self.__df_resolved_song[self.__df_resolved_song['id']==self._df_selected_id]['title'].values[0]
+            self.__song_lookup.update({int(self._df_selected_id):str("Composer: "+str(composer)+", Song: "+str(title)+', Arranger: '+str(arranger))})
+            
+
+        return ui.row(
+            ui.div(self._init_id_text()),
+            ui.input_select(id='song_id', label="Select a Song *", choices=self.__song_lookup, selected=self.__init_song()).add_style('color:red;'), # REQUIRED VALUE
+            ui.input_text(id="description",label="Song Description/Inspiration", value=self.__init_description()), 
+            ui.input_date(id="discovery_date", label="Date Discovered",value=self.__init_discovery_date()).add_style('color:red;'), # REQUIRED VALUE
+        ),
+
+    def server_call(self, input, output, session, summary_df):
+        """
+        Song Goal Modal Form Server code goes here
+        """
+
+        @module.server
+        def input_form_func(input, output, session, summary_df):
+
+            output_name = reactive.value('')
+            
+            @reactive.effect
+            @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
+            def triggerInputFormSubmit():
+                #print("Inside Submit")
+                song_id = None if input.song_id() == '' else input.song_id()
+                # Create single row as dataframe
+                df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
+                                                   'song_id':[song_id], # REQUIRED VALUE
+                                                   'composer':[input.composer()],
+                                                   'discovery_date':[input.discovery_date()]})
+                #print(df_row_to_database.to_string())
+                if self._df_selected_id:
+                    self._db_table_model.update(df_row_to_database)
+                else:
+                    self._db_table_model.insert(df_row_to_database)
+                
+                ui.modal_remove()
+                self.processData()
+                summary_df.set(self.df_summary)
+            
+            @reactive.effect
+            @reactive.event(input.btn_input_cancel)
+            def triggerInputCancel():
+                #print("Cancelled")
+                ui.modal_remove()
+
+            return self.df_summary.copy
+
+        return input_form_func(self._namespace_id, summary_df)
+
+
 class SessionInputTableModel(ShinyInputTableModel):    
 
     __db_artist_model=None
     __db_song_model=None
     __song_lookup=None
+    __guitar_lookup=None
 
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel):
         self._namespace_id=namespace_id

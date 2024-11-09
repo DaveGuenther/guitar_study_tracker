@@ -10,7 +10,7 @@ from shiny import App, ui, render, reactive, types, req, module
 # App Specific Code
 import orm # database models
 from database import DatabaseSession, DatabaseModel
-from data_processing import ArtistInputTableModel, StyleInputTableModel, SongInputTableModel, SessionInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
+from data_processing import ArtistInputTableModel, StyleInputTableModel, SongInputTableModel, SessionInputTableModel, StringSetInputTableModel, SongGoalInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
 from table_navigator import ShinyFormTemplate
 
 #logging.basicConfig(filename='myapp.log', level=logging.INFO)
@@ -30,8 +30,14 @@ artist_model = DatabaseModel(orm.tbl_artist,pg_session)
 style_model = DatabaseModel(orm.tbl_style, pg_session)
 song_model = DatabaseModel(orm.tbl_song, pg_session)
 session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
-
+string_set_model = DatabaseModel(orm.tbl_string_set, pg_session)
+song_goal_model = DatabaseModel(orm.tbl_song_goals, pg_session)
 # Establish schema specific table models (tying together their lookups)
+
+string_set_input_table_model = StringSetInputTableModel(namespace_id = 'string_set',
+                                                        title='String Set',
+                                                        db_table_model=string_set_model)
+
 artist_input_table_model = ArtistInputTableModel(namespace_id = 'artist', 
                                             title="Artist", 
                                             db_table_model=artist_model)
@@ -46,6 +52,12 @@ song_input_table_model = SongInputTableModel(namespace_id = 'song',
                                             db_artist_model=artist_model, #required lookup
                                             db_style_model=style_model) #required lookup
 
+song_goal_input_table_model = SongGoalInputTableModel(namespace_id='song_goal',
+                                                      title="Song Goals", 
+                                                      db_table_model=song_goal_model,
+                                                      db_song_model=song_model, 
+                                                      db_artist_model=artist_model)
+
 session_input_table_model = SessionInputTableModel(namespace_id = 'session', 
                                             title="Session", 
                                             db_table_model=session_model,
@@ -53,10 +65,12 @@ session_input_table_model = SessionInputTableModel(namespace_id = 'session',
                                             db_artist_model=artist_model) # required lookup
 
 # Initialize table navigator form
+string_set_form_template = ShinyFormTemplate('string_set',string_set_input_table_model)
 artist_form_template = ShinyFormTemplate('artist',artist_input_table_model)
 style_form_template = ShinyFormTemplate('style',style_input_table_model)
 song_form_template = ShinyFormTemplate('song',song_input_table_model)
 session_form_template = ShinyFormTemplate('session',session_input_table_model)
+song_goal_form_template = ShinyFormTemplate('song_goal', song_goal_input_table_model)
 
 app_ui = ui.page_fluid(
 
@@ -96,21 +110,26 @@ def server(input, output, session):
                 user_name = os.getenv('pg_user')
                 pw = os.getenv('pg_pw')
                 read_only_acct=True
-        
+
+
 
 
 
         # connect to database
+        string_set_model.connect(user_name, pw, read_only_acct)
         artist_model.connect(user_name, pw, read_only_acct)
         style_model.connect(user_name, pw, read_only_acct)
         song_model.connect(user_name, pw, read_only_acct)
         session_model.connect(user_name, pw, read_only_acct)
+        song_goal_model.connect(user_name, pw, read_only_acct)
 
         # begin data processing in artist table navigator
+        string_set_input_table_model.processData()
         artist_input_table_model.processData()
         style_input_table_model.processData()
         song_input_table_model.processData()
         session_input_table_model.processData()
+        song_goal_input_table_model.processData()
 
         # remove user/pw screen
         ui.remove_ui(selector="#credentials_input")
@@ -135,6 +154,15 @@ def server(input, output, session):
                 ui.nav_panel("Music Styles", 
                     style_form_template.ui_call(),
                 ),                    
+
+                ui.nav_panel("String Sets", 
+                    string_set_form_template.ui_call(),
+                ),               
+
+                ui.nav_panel("Song Goals", 
+                    song_goal_form_template.ui_call(),
+                ),            
+
                 title=dynamic_app_title(read_only_acct),
                 id="page",
             ),
@@ -143,10 +171,13 @@ def server(input, output, session):
         connected_to_db.set(True)
 
         # Execute server code for shiny modules
+        string_set_form_template.server_call(input, output, session)
         artist_form_template.server_call(input, output, session)
         style_form_template.server_call(input, output, session)
         song_form_template.server_call(input, output, session)
-        session_form_template.server_call(input, output, session)    
+        session_form_template.server_call(input, output, session)  
+        song_goal_form_template.server_call(input, output, session)  
+
 
 
 app = App(app_ui, server, debug=True)
