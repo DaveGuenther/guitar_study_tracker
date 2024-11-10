@@ -83,7 +83,7 @@ class DatabaseModel:
 
 
     def update(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row_id = row['id']
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
@@ -91,14 +91,14 @@ class DatabaseModel:
         self.read()
 
     def insert(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.insertRecord(self.__orm, row_data)
         self.read()
 
     def delete(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row_id=row['id']
         self.__session.deleteRecord(self.__orm, row_id)
 
