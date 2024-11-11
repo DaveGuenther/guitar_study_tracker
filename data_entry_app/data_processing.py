@@ -1121,9 +1121,59 @@ class SessionInputTableModel(ShinyInputTableModel):
                 else:
                     data_validation_msg.set('')
 
+
+
                 # Data Validation Passed - Write database row
 
+                # Determine the Stage of progress:
+                # Binary Tree to speed up stage classification
+                #
+                #                        at_tempo_date
+                #                       /            \
+                #           off_book_date             play_ready_date
+                #          /            \             /              \
+                #     "Learning     "Achieving     "Phrasing"       "Maintenance"
+                #        Notes"        Tempo"
+
+                df_songs = self._SessionInputTableModel__db_song_model.df_raw
                 song_id = None if input.song_id() == '' else input.song_id()
+                ser_this_song = df_songs[df_songs['id']==int(song_id)].iloc[0]
+                session_date = input.session_date()
+                stage=''
+                if ser_this_song['at_tempo_date']:
+                    if session_date>=ser_this_song['at_tempo_date']:
+                        # Test against play_ready_date
+                        if ser_this_song['play_ready_date']:
+                            if session_date>=ser_this_song['play_ready_date']:
+                                stage='Maintenance'
+                            else:
+                                stage='Phrasing'
+                        else:
+                            stage='Phrasing'
+                    else:
+                        # session_date is < at_tempo_date.  test off_book_date
+                        if ser_this_song['off_book_date']:
+                            if session_date>=ser_this_song['off_book_date']:
+                                stage="Achieving Tempo"
+                            else:
+                                stage="Learning Notes"
+                        else:
+                            stage="Learning Notes"
+                else:
+                    #   test off_book_date
+                    if ser_this_song['off_book_date']:
+                        if session_date>=ser_this_song['off_book_date']:
+                            stage="Achieving Tempo"
+                        else:
+                            stage="Learning Notes"
+                    else:
+                        stage="Learning Notes"
+                    # at_tempo_date doesn't exist. Test off_book_date
+
+
+                
+                                
+                
                 # Create single row as dataframe
                 df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
                                                 'session_date':[input.session_date()],
@@ -1131,7 +1181,8 @@ class SessionInputTableModel(ShinyInputTableModel):
                                                 'l_song_id':[song_id],
                                                 'notes':[input.notes()],
                                                 'video_url':[input.video_url()],
-                                                'guitar_id':[input.guitar_id()]})
+                                                'guitar_id':[input.guitar_id()],
+                                                'stage':[stage]})
                 if self._df_selected_id:
                     self._db_table_model.update(df_row_to_database)
                 else:

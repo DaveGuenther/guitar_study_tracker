@@ -14,8 +14,9 @@ class GlobalData:
     """
     # used for singleton pattern
     _instance=None
-    _df_sessions=None
-    _df_365=None
+    _df_sessions=None # General sessions data to understand time spent playing songs
+    _df_365=None # Dataset used to build the waffle chart on the main page
+    _df_grindage=None # Dataset that is used to build 
 
     def __new__(cls):
         if cls._instance is None:
@@ -49,6 +50,7 @@ class GlobalData:
         session_model.connect(user_name, pw, True)
         
         self._df_sessions, self._df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
+        self._df_grindage = data_prep.processSongGrindageData(self._df_sessions, song_model)
 
     def get_df_sessions(self):
         return self._df_sessions

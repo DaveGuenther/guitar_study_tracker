@@ -75,3 +75,13 @@ def processData(session_data, song_data, artist_data, style_data):
     df_365 = df_summary[df_summary['session_date']>=today-pd.DateOffset(days=365)] # for the 365 day heatmap
     df_summary=df_summary[df_summary['id'].notna()] #for the cumulative data since inception
     return df_summary, df_365
+
+def processSongGrindageData(df_sessions, song_model):
+    df_songs = song_model.df_raw
+    df_sessions = df_sessions[df_sessions['Song Type']=='Song']
+
+    df_sessions_expanded = df_sessions.merge(df_songs[['id','start_date','off_book_date','at_tempo_date','play_ready_date']], how='left', left_on='l_song_id', right_on='id').drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
+    
+
+
+    

@@ -56,6 +56,7 @@ tbl_practice_session = Table(
     Column('l_song_id', Integer, nullable=False), # foreign key to song.id
     Column('notes', Text, nullable=True),
     Column('video_url', Text, nullable=True),
+    Column('stage', Text, nullable=True),
     schema=schema,
 )
 
@@ -95,8 +96,3 @@ tbl_string_set = Table(
     schema=schema,
 )
 
-#tbl_defaults = Table(
-#    'default_values',
-#    metadata,
-#    Column('')
-#)
