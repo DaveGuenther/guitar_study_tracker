@@ -1,10 +1,15 @@
 # Core
-from shiny import ui, module
+
 from datetime import date
 import pandas as pd
 
 # Utility
 import logger
+
+# Web/Visual frameworks
+from shiny import ui, module
+import plotly.graph_objects as go
+from shinywidgets import output_widget, render_widget, render_plotly
 
 # App Specific Code
 import global_data
@@ -38,6 +43,9 @@ def career_ui():
             filter_shelf(df_sessions),
             width=300,
         ),
+        ui.card(
+            output_widget(id='song_grindage_chart')
+        ).add_class('dashboard-card'),
         ui.row(
             ui.column(3,
                 ui.card(
@@ -78,5 +86,9 @@ def career_ui():
 @module.server
 def career_server(input, output, session):
     Logger(session.ns)
-    pass
+
+    @render_widget
+    def song_grindage_chart():
+        df_grindage_data = df_sessions.groupby(['l_song_id'])
+    
         

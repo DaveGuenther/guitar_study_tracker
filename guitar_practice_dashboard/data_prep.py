@@ -44,10 +44,10 @@ def processData(session_data, song_data, artist_data, style_data):
     df_resolved_sessions['session_date'] = pd.to_datetime(df_resolved_sessions['session_date'])
     df_resolved_sessions = pd.concat([df_resolved_sessions,df_zeros]).reset_index()
     df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
-    df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','video_url':'Video URL','song_type':'Song Type'},axis=1)
+    df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','stage':'Stage','video_url':'Video URL','song_type':'Song Type'},axis=1)
     
     # Collect date parts of the session_date for use in various visuals
-    df_summary = df_resolved_sessions[['id', 'Session Date','session_date', 'Duration', 'Song','Song Type','Style','l_song_id','Composer','Arranger','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
+    df_summary = df_resolved_sessions[['id', 'Session Date','session_date','Stage', 'Duration', 'Song','Song Type','Style','l_song_id','Composer','Arranger','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
     #df_summary['URL_provided'] = df_summary['Video URL'].apply(lambda observation: True if observation else False)
     df_summary['session_date'] = pd.to_datetime(df_summary['session_date'])
     df_summary['Year'] = df_summary['session_date'].dt.isocalendar().year
@@ -76,12 +76,38 @@ def processData(session_data, song_data, artist_data, style_data):
     df_summary=df_summary[df_summary['id'].notna()] #for the cumulative data since inception
     return df_summary, df_365
 
-def processSongGrindageData(df_sessions, song_model):
+def processSongGrindageData(df_sessions, session_model, song_model):
+    #df_songs = song_model.df_raw
+    #df_sessions = df_sessions[df_sessions['Song Type']=='Song']
+
+    #df_sessions_expanded = df_sessions.merge(df_songs[['id','start_date','off_book_date','at_tempo_date','play_ready_date']], how='left', left_on='l_song_id', right_on='id').drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
+    df_sessions = session_model.df_raw
     df_songs = song_model.df_raw
-    df_sessions = df_sessions[df_sessions['Song Type']=='Song']
+    df_grindage = df_sessions.groupby(['l_song_id','stage'])[['duration']].sum().reset_index()
+    df_grindage = df_grindage.merge(df_songs, how='left',left_on='l_song_id',right_on='id')
+    today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
+    df_grindage['today']= today
+    def getStageStartDates(row):
+        date_ref = {
+            'Learning Notes':'start_date',
+            'Achieving Tempo':'off_book_date',
+            'Phrasing':'at_tempo_date',
+            'Maintenance':'play_ready_date'
+        }
+        return row[date_ref[row['stage']]]
 
-    df_sessions_expanded = df_sessions.merge(df_songs[['id','start_date','off_book_date','at_tempo_date','play_ready_date']], how='left', left_on='l_song_id', right_on='id').drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
-    
+    def getStageEndDates(row):
+        date_ref = {
+            'Learning Notes':'off_book_date',
+            'Achieving Tempo':'at_tempo_date',
+            'Phrasing':'play_ready_date',
+            'Maintenance':'today'
+        }
+        return row[date_ref[row['stage']]]
 
+    df_grindage['Start Date'] = df_grindage.apply(getStageStartDates, axis=1)
+    df_grindage['End Date'] = df_grindage.apply(getStageEndDates, axis=1)
+    df_grindage['End Date'] = df_grindage['End Date'].fillna(today)
+    return df_grindage
 
     
