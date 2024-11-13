@@ -108,6 +108,8 @@ def processSongGrindageData(df_sessions, session_model, song_model):
     df_grindage['Start Date'] = df_grindage.apply(getStageStartDates, axis=1)
     df_grindage['End Date'] = df_grindage.apply(getStageEndDates, axis=1)
     df_grindage['End Date'] = df_grindage['End Date'].fillna(today)
+    df_grindage = df_grindage.rename({'stage':'Stage','duration':'Duration','title':'Title','composer':'Composer','arranger':'Arranger','song_type':'Song Type'},axis=1)
+    df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Song Type','Start Date','End Date']]
     return df_grindage
 
     

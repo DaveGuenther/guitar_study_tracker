@@ -9,6 +9,7 @@ import logger
 # Web/Visual frameworks
 from shiny import ui, module
 import plotly.graph_objects as go
+import plotly.express as px
 from shinywidgets import output_widget, render_widget, render_plotly
 
 # App Specific Code
@@ -19,6 +20,7 @@ Logger = logger.FunctionLogger
 
 
 df_sessions = globals.get_df_sessions()
+df_grindage = globals.get_df_song_grindage()
 
 def timestamp_to_date(this_timestamp: pd._libs.tslibs.timestamps._Timestamp):
     return date(this_timestamp.year, this_timestamp.month, this_timestamp.day)
@@ -89,6 +91,44 @@ def career_server(input, output, session):
 
     @render_widget
     def song_grindage_chart():
-        df_grindage_data = df_sessions.groupby(['l_song_id'])
+        print("Hello")
+
+        # Unused Code - Just to figure out way to calculate x, y, and color for bar traces for any dataframe
+        for color in df_grindage['Stage'].unique():
+            print(list(df_grindage[df_grindage['Stage']==color]['Title']))
+            print(list(df_grindage[df_grindage['Stage']==color]['Duration']))
+
+
+        fig = px.bar(
+            df_grindage, 
+            x='Duration',
+            y='Title',
+            color='Stage',
+            title='Repertoire Progress',
+
+            
+
+        )
+
+#        fig.update_layout(
+            
+#            title=dict(text="Repertoire Progress",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'),
+#            xaxis_side='bottom',
+#            xaxis_dtick=1, 
+            
+            # Main plot styling
+#            font_family='garamond',            
+#            font_color='#Ff9b15',
+#            paper_bgcolor='rgba(0, 0, 0, 0)',
+            
+#            xaxis_tickfont=dict(size=14),
+#            yaxis_tickfont=dict(size=14),
+
+#            yaxis_dtick=1,
+#            plot_bgcolor="#40291D",        
+#        )
+        figWidget = go.FigureWidget(fig)
+        return figWidget
+        
     
         

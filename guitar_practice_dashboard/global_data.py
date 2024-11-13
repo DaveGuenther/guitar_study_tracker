@@ -62,3 +62,6 @@ class GlobalData:
     def get_df_365(self):
         return self._df_365
     
+    def get_df_song_grindage(self):
+        return self._df_song_grindage
+    
