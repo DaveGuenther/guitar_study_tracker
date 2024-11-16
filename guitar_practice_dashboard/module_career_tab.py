@@ -150,6 +150,13 @@ def career_server(input, output, session):
             | Blue   | Diamond| 9        |
             +--------+--------+----------+
 
+            returns:
+            {
+                'dim_a_unique':['Red','Green','Purple','Blue'],
+                'dim_b_unique':['Circle','Square','Diamond'],
+                'field_3':[10,]
+            }
+
             """
             if not dimension_a_unique_sort_order:
                 dimension_a_unique_sort_order = list(dimension_a.unique())
@@ -163,18 +170,19 @@ def career_server(input, output, session):
             df_in = df_in.sort_values(['dim_a','dim_b'])
             df_in_pivot = df_in.pivot(columns=['dim_a'],index=['dim_b'])
             dim_a_uniques = list(df_in['dim_a'].unique())
+            dim_b_uniques = list(df_in['dim_b'].unique())
             dim_b_vals = list(df_in_pivot.index)
             dim_c_vals=[]
             for dim_b in dim_b_vals:
                 dim_c_vals.append(list(df_in_pivot.loc[dim_b]['field_3'].fillna(0)))
-            return dim_a_uniques, dim_c_vals
+            return {'dim_a_unique':dim_a_uniques, 'dim_b_unique':dim_b_uniques,'field_3_values':dim_c_vals}
 
 
         stage_order = ['Learning Notes','Achieving Tempo','Phrasing','Maintenance']
         title_order = list(df_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=False).index)
-        title_vals, duration_vals = make_stacked_bar_traces(df_grindage['Title'], df_grindage['Stage'],df_grindage['Duration'], dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
-        
-        data = [go.Bar(name=color, x = title_vals, y=duration) for color,duration in zip(stage_order,duration_vals)]
+        trace_dict = make_stacked_bar_traces(df_grindage['Title'], df_grindage['Stage'],df_grindage['Duration'], dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
+
+        data = [go.Bar(name=color, x = trace_dict['dim_a_unique'], y=duration) for color,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
 
         fig = go.Figure(data)
         fig.update_layout(barmode='stack')
