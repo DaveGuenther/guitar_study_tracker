@@ -93,42 +93,6 @@ def career_server(input, output, session):
     def song_grindage_chart():
         print("Hello")
 
-        def make_stacked_bar_traces_old(df_in, dimension_a, dimension_b, field_3, dimension_a_unique_sort_order=None, dimension_b_unique_sort_order=None):
-            """
-            dimension_a, dimension_b  (str): column name of a dimension in the incoming dataframe.  These will be the rows and columns of the matrix that is built.
-            field_3 (str): column name of a measure or dimension in the dataframe who's value will be isolated in the intersection of dimension_a and dimension_b.
-            dimension_a_unique_sort_order (list): This is a list of the unique values of dimension_a sorted in any manner the usert wants. If omitted, it will use the data source order of unique values of dimension_a. 
-
-            Ex df_summary:
-            +--------+--------+----------+
-            | cat_a  | cat_b  |  measure |
-            +--------+--------+----------+
-            | Red    | Circle | 10       |
-            | Red    | Square | 5        |
-            | Green  | Diamond| 6        |
-            | Green  | Square | 11       |
-            | Purple | Circle | 3        |
-            | Purple | Diamond| 2        |
-            | Purple | Square | 6        |
-            | Blue   | Circle | 8        |
-            | Blue   | Diamond| 9        |
-            +--------+--------+----------+
-
-            """
-            if dimension_a_unique_sort_order:
-                df_in[dimension_a] = pd.Categorical(df_in[dimension_a], categories=dimension_a_unique_sort_order, ordered=True)
-            if dimension_b_unique_sort_order:
-                df_in[dimension_b] = pd.Categorical(df_in[dimension_b], categories=dimension_b_unique_sort_order, ordered=True)
-            df_in = df_in.sort_values([dimension_a,dimension_b])
-            df_in_pivot = df_in.pivot(columns=[dimension_a],index=[dimension_b])
-            dim_a_vals = list(df_in[dimension_a].unique())
-            dim_b_vals = list(df_in_pivot.index)
-            dim_c_vals=[]
-            for dim_b in dim_b_vals:
-                dim_c_vals.append(list(df_in_pivot.loc[dim_b][field_3].fillna(0)))
-            return dim_a_vals, dim_c_vals
-            
-
         def make_stacked_bar_traces(dimension_a, dimension_b, field_3, dimension_a_unique_sort_order=None, dimension_b_unique_sort_order=None):
             """
             dimension_a, dimension_b  (str): column name of a dimension in the incoming dataframe.  These will be the rows and columns of the matrix that is built.
@@ -149,13 +113,30 @@ def career_server(input, output, session):
             | Blue   | Circle | 8        |
             | Blue   | Diamond| 9        |
             +--------+--------+----------+
+            df = pd.DataFrame({
+                'cat_a':['Red','Red','Green','Green','Purple','Purple','Purple','Blue','Blue'],
+                'cat_b':['Circle','Square','Diamond','Square','Circle','Diamond','Square','Circle','Diamond'],
+                'measure': [10,5,6,11,3,2,6,8,9]})
 
+
+            trace_dict = make_stacked_bar_traces(df['cat_a'], df['cat_b'],df['measure'])
             returns:
             {
                 'dim_a_unique':['Red','Green','Purple','Blue'],
                 'dim_b_unique':['Circle','Square','Diamond'],
-                'field_3':[10,]
+                'field_3_values':[
+                            [10.0, 0.0, 3.0, 8.0],  #Circle
+                            [5.0, 11.0, 6.0, 0.0],  #Square
+                            [0.0, 6.0, 2.0, 9.0]    #Diamond
+                        ]
             }
+
+            Use this to build traces for plotly bars:
+            
+            from plotly import go
+            data = [go.Bar(name=color, x = trace_dict['dim_a_unique'], y=duration) for color,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
+            fig = go.Figure(data)
+            fig.update_layout(barmode='stack')
 
             """
             if not dimension_a_unique_sort_order:
