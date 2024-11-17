@@ -160,10 +160,10 @@ def career_server(input, output, session):
 
 
         stage_order = ['Learning Notes','Achieving Tempo','Phrasing','Maintenance']
-        title_order = list(df_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=False).index)
+        title_order = list(df_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
         trace_dict = make_stacked_bar_traces(df_grindage['Title'], df_grindage['Stage'],df_grindage['Duration'], dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
 
-        data = [go.Bar(name=color, x = trace_dict['dim_a_unique'], y=duration) for color,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
+        data = [go.Bar(name=color, y = trace_dict['dim_a_unique'], x=duration, orientation='h') for color,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
 
         fig = go.Figure(data)
         fig.update_layout(barmode='stack')
