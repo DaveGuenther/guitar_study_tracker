@@ -163,36 +163,31 @@ def career_server(input, output, session):
         title_order = list(df_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
         trace_dict = make_stacked_bar_traces(df_grindage['Title'], df_grindage['Stage'],df_grindage['Duration'], dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
 
-        data = [go.Bar(name=color, y = trace_dict['dim_a_unique'], x=duration, orientation='h') for color,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
+        #category_colors={'Learning Notes':'#8400ff','Achieving Tempo':'#2980B9','Phrasing':'Green','Maintenance':'#6aa16a'}
+        category_colors={'Learning Notes':'#801100',
+                         'Achieving Tempo':'#d73502',
+                         'Phrasing':'#ff7500',
+                         'Maintenance':'#FAC000'}
+
+
+        data = [go.Bar(name=stage, y = trace_dict['dim_a_unique'], x=duration, orientation='h', marker=dict({'color':category_colors[stage]})) for stage,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
 
         fig = go.Figure(data)
         fig.update_layout(barmode='stack')
 
-#        fig = px.bar(
-#            df_grindage, 
-#            x='Duration',
-#            y='Title',
-#            color='Stage',
-#            title='Repertoire Progress',
-#        )
-
-#        fig.update_layout(
-            
-#            title=dict(text="Repertoire Progress",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'),
-#            xaxis_side='bottom',
-#            xaxis_dtick=1, 
+        fig.update_layout(
+            margin=dict(t=42, b=0, l=0, r=0), # add space for title text
+            title=dict(text="Repertoire Progress",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'), 
             
             # Main plot styling
-#            font_family='garamond',            
-#            font_color='#Ff9b15',
-#            paper_bgcolor='rgba(0, 0, 0, 0)',
-            
-#            xaxis_tickfont=dict(size=14),
-#            yaxis_tickfont=dict(size=14),
+            font_family='garamond',            
+            font_color='#Ff9b15',
+            paper_bgcolor='rgba(0, 0, 0, 0)', # background for all area that is not the plot marks themselves
+            xaxis_tickfont=dict(size=14), # y label styling
+            yaxis_tickfont=dict(size=14), # x label styling
 
-#            yaxis_dtick=1,
-#            plot_bgcolor="#40291D",        
-#        )
+            plot_bgcolor='rgba(0, 0, 0, 0)', # background for the actual plot area (plot marks themselves)
+        )
         figWidget = go.FigureWidget(fig)
         return figWidget
         
