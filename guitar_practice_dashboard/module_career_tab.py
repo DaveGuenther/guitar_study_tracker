@@ -1,5 +1,5 @@
 # Core
-
+import math
 from datetime import date
 import pandas as pd
 
@@ -7,7 +7,7 @@ import pandas as pd
 import logger
 
 # Web/Visual frameworks
-from shiny import ui, module
+from shiny import ui, module, reactive, render
 import plotly.graph_objects as go
 import plotly.express as px
 from shinywidgets import output_widget, render_widget, render_plotly
@@ -45,42 +45,46 @@ def career_ui():
             filter_shelf(df_sessions),
             width=300,
         ),
-        ui.card(
-            output_widget(id='song_grindage_chart')
-        ).add_class('dashboard-card'),
+        
         ui.row(
             ui.column(3,
                 ui.card(
-                    ui.h4("Avg. Practice Time/Day"),
+                    ui.h1(ui.output_text(id="avg_practice_time")),
+                    ui.h5("Avg. Practice Time/Day (Mins)"),
 
-                ),
+                ).add_class('ban-card'),
             ),
             ui.column(2,
                 ui.card(
-                    ui.h4("Longest Practice Streak"),
+                    ui.h1(ui.output_text(id='longest_consecutive_streak')),
+                    ui.h5("Longest Practice Streak (Consecutive Days)"),
 
-                ),                        
+                ).add_class('ban-card'),                        
 
             ),
             ui.column(2,
                 ui.card(
-                    ui.h4("Longest Session"),
+                    
+                    ui.h5("Longest Session (Mins)"),
 
-                ),
+                ).add_class('ban-card'),
             ),
             ui.column(3,
                 ui.card(
-                    ui.h4("Total Career Practice Time"),
+                    ui.h5("Total Career Practice Time (Hrs)"),
 
-                ),
+                ).add_class('ban-card'),
             ),
             ui.column(2,
                 ui.card(
-                    ui.h4("Year:"),
+                    ui.h5("Career Length (Yrs)"),
 
-                ),
+                ).add_class('ban-card'),
             ),                                                                                                
         ),
+        ui.card(
+            output_widget(id='song_grindage_chart')
+        ).add_class('dashboard-card'),        
     )
 
     return ret_val
@@ -88,6 +92,27 @@ def career_ui():
 @module.server
 def career_server(input, output, session):
     Logger(session.ns)
+
+    @render.text
+    def avg_practice_time():
+        flt_avg = (df_sessions.groupby('Session Date')['Duration'].sum()).mean()
+        minutes=math.floor(flt_avg)
+        return f"{minutes}"
+    
+    @render.text
+    def longest_consecutive_streak():
+
+        ser_dates = df_sessions['session_date'].unique()
+        df=pd.DataFrame({'Date':ser_dates})
+        df = df.sort_values('Date')
+        df['date_diff'] = df['Date'].diff().dt.days
+        df['streak_group'] = (df['date_diff'] != 1).cumsum()
+
+        streak_counts = df.groupby('streak_group').size()
+        longest_streak = streak_counts.max()
+
+        return f"{longest_streak}"
+
 
     @render_widget
     def song_grindage_chart():
@@ -170,7 +195,15 @@ def career_server(input, output, session):
                          'Maintenance':'#FAC000'}
 
 
-        data = [go.Bar(name=stage, y = trace_dict['dim_a_unique'], x=duration, orientation='h', marker=dict({'color':category_colors[stage]})) for stage,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
+        data = [go.Bar(name=stage, 
+                       y = trace_dict['dim_a_unique'], 
+                       x=duration, orientation='h', 
+                       marker=dict(
+                           {
+                               'color':category_colors[stage], # assign custom colors to each trace
+                               'cornerradius':30, # make tip of bar curved
+                               'line_color':'rgba(0, 0, 0, 0)', # remove the border around each bar segment
+                            })) for stage,duration in zip(trace_dict['dim_b_unique'],trace_dict['field_3_values'])]
 
         fig = go.Figure(data)
         fig.update_layout(barmode='stack')
@@ -187,6 +220,14 @@ def career_server(input, output, session):
             yaxis_tickfont=dict(size=14), # x label styling
 
             plot_bgcolor='rgba(0, 0, 0, 0)', # background for the actual plot area (plot marks themselves)
+        
+            legend=dict(
+            orientation="h",  # Horizontal orientation
+            yanchor="bottom",  # Anchor to bottom
+            y=-0.2,  # Adjust vertical position
+            xanchor="left",  # Center horizontally
+            #x=0.5  # Adjust horizontal position
+            )
         )
         figWidget = go.FigureWidget(fig)
         return figWidget

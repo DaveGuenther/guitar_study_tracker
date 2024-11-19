@@ -253,3 +253,11 @@ iframe {
 .guitar-card-image {
     object-fit:fill;
 }
+
+
+/* Career Tab Only */
+.ban-card{
+    background-color: #775745 !important;
+    color: #FFF8DC;
+    text-align: center;
+}
