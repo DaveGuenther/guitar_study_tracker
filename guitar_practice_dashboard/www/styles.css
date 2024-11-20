@@ -255,9 +255,23 @@ iframe {
 }
 
 
-/* Career Tab Only */
+/*### Career Tab ###*/
+.ban-row{
+    flex-direction: horizontal;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
 .ban-card{
+    flex: 1 1 auto;
     background-color: #775745 !important;
     color: #FFF8DC;
     text-align: center;
+    
+}
+
+.ban-text{
+    font-size: 50pt;
+    white-space: nowrap;
+    
 }
