@@ -48,42 +48,31 @@ def career_ui():
         #),
         
         ui.row(
-            ui.column(3,
-                ui.card(
-                    ui.output_text(id="avg_practice_time").add_class('ban-text'),
-                    ui.h5("Avg. Practice Time/Day"),
+            ui.card(
+                ui.output_text(id="avg_practice_time").add_class('ban-text'),
+                ui.h5("Avg. Practice Time/Day"),
+            ).add_class('ban-card'),
 
-                ).add_class('ban-card'),
-            ),
-            ui.column(2,
-                ui.card(
-                    ui.output_text(id='longest_consecutive_streak').add_class('ban-text'),
-                    ui.h5("Longest Practice Streak"),
+            ui.card(
+                ui.output_text(id='longest_consecutive_streak').add_class('ban-text'),
+                ui.h5("Longest Practice Streak"),
 
-                ).add_class('ban-card'),                        
+            ).add_class('ban-card'),                        
+            ui.card(
+                ui.output_text(id='longest_session').add_class('ban-text'),
+                ui.h5("Longest Session"),
 
-            ),
-            ui.column(2,
-                ui.card(
-                    ui.output_text(id='longest_session').add_class('ban-text'),
-                    ui.h5("Longest Session"),
+            ).add_class('ban-card'),
+            ui.card(
+                ui.output_text(id='total_practice_time').add_class('ban-text'),
+                ui.h5("Total Practice Time"),
 
-                ).add_class('ban-card'),
-            ),
-            ui.column(3,
-                ui.card(
-                    ui.output_text(id='total_practice_time').add_class('ban-text'),
-                    ui.h5("Total Practice Time"),
+            ).add_class('ban-card'),
+            ui.card(
+                ui.output_text('career_length_yrs').add_class('ban-text'),
+                ui.h5("Career Length"),
 
-                ).add_class('ban-card'),
-            ),
-            ui.column(2,
-                ui.card(
-                    ui.output_text('career_length_yrs').add_class('ban-text'),
-                    ui.h5("Career Length"),
-
-                ).add_class('ban-card'),
-            ),                                                                                                
+            ).add_class('ban-card'),                                                     
         ).add_class('ban-row'),
         ui.card(
             output_widget(id='song_grindage_chart')
@@ -252,7 +241,7 @@ def career_server(input, output, session):
             yanchor="bottom",  # Anchor to bottom
             y=-0.2,  # Adjust vertical position
             xanchor="left",  # Center horizontally
-            #x=0.5  # Adjust horizontal position
+            #x=-2,  # Adjust horizontal position
             )
         )
 

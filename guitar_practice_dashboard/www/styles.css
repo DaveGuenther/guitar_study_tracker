@@ -259,7 +259,6 @@ iframe {
 .ban-row{
     flex-direction: horizontal;
     flex-wrap: wrap;
-    align-items: stretch;
 }
 
 .ban-card{
@@ -267,7 +266,9 @@ iframe {
     background-color: #775745 !important;
     color: #FFF8DC;
     text-align: center;
-    
+    width:auto;
+    margin-left: 6px;
+    margin-right: 6px;
 }
 
 .ban-text{
