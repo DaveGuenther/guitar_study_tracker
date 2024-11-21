@@ -18,6 +18,8 @@ class GlobalData:
     _df_365=None # Dataset used to build the waffle chart on the main page
     _df_song_grindage=None # Dataset that is used to build 
 
+    _legend_id=0 # Used add as suffix to CSS class names for custom chart legends that are disconnected entirely from their plotly figures
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(GlobalData, cls).__new__(cls)
@@ -64,4 +66,10 @@ class GlobalData:
     
     def get_df_song_grindage(self):
         return self._df_song_grindage
-    
+
+    def increment_legend_id(self):
+        """Call this before adding a new legend object"""
+        self._legend_id+=1
+
+    def get_legend_id(self):
+        return self._legend_id    

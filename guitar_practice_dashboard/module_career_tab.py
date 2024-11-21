@@ -75,7 +75,8 @@ def career_ui():
             ).add_class('ban-card'),                                                     
         ).add_class('ban-row'),
         ui.card(
-            output_widget(id='song_grindage_chart')
+            output_widget(id='song_grindage_chart'),
+            ui.output_ui(id='song_grind_legend'),
         ).add_class('dashboard-card'),        
     )
 
@@ -238,8 +239,8 @@ def career_server(input, output, session):
         
             legend=dict(
             orientation="h",  # Horizontal orientation
-            yanchor="bottom",  # Anchor to bottom
-            y=-0.2,  # Adjust vertical position
+            yanchor="bottom",  # Anchor to bottom of plotspace
+            y=-0.3,  # Adjust vertical position -- I don't really understand the 'paper' coordinates here
             xanchor="left",  # Center horizontally
             #x=-2,  # Adjust horizontal position
             )
@@ -250,6 +251,92 @@ def career_server(input, output, session):
         )
         figWidget = go.FigureWidget(fig)
         return figWidget
-        
-    
+
+    def custom_categorical_legend(legend_id, categories={'One':'red','Two':'Green','Three':'blue'}):
+        styles = """
+            <style>
+                .legend"""+legend_id+""" {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .legend-item"""+legend_id+""" {
+                    display: flex;
+                    align-items: center;
+                    margin-right: 10px;
+                    
+                }
+
+                .legend-color"""+legend_id+""" {
+                    width: 20px;
+                    height: 20px;
+                    border: 1px solid black;
+                    margin-right: 5px;
+                    border-radius: 5px;
+                }
+            </style>
+            """
+        legend = """
+            <div class="legend"""+legend_id+"""">
+            """
+        for category, color in zip(categories.keys(), categories.values()):
+            legend_item="""
+                <div class="legend-item"""+legend_id+"""">
+                    <div class="legend-color"""+legend_id+"""" style="background-color: """+color+""";"></div>
+                    <span>"""+category+"""</span>
+                </div>
+                """
+            legend+=legend_item
+        legend+="""
+            </div>
+            """
+        return styles+legend
+
+    @render.text
+    def song_grind_legend():
+        category_colors={'Learning Notes':'#801100',
+                         'Achieving Tempo':'#d73502',
+                         'Phrasing':'#ff7500',
+                         'Maintenance':'#FAC000'}
+        legend_id = str(globals.get_legend_id())
+        legend = custom_categorical_legend(legend_id, category_colors)
+        ret_val = """
+            <style>
+                .legend"""+legend_id+""" {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .legend-item"""+legend_id+""" {
+                    display: flex;
+                    align-items: center;
+                    margin-right: 10px;
+                    
+                }
+
+                .legend-color"""+legend_id+""" {
+                    width: 20px;
+                    height: 20px;
+                    border: 1px solid black;
+                    margin-right: 5px;
+                    border-radius: 5px;
+                }
+            </style>
+            <div class="legend"""+legend_id+"""">
+                <div class="legend-item"""+legend_id+"""">
+                    <div class="legend-color"""+legend_id+"""" style="background-color: red;"></div>
+                    <span>Learning Notes</span>
+                </div>
+                <div class="legend-item"""+legend_id+"""">
+                    <div class="legend-color"""+legend_id+"""" style="background-color: green;"></div>
+                    <span>Achieving Tempo</span>
+                </div>
+                <div class="legend-item"""+legend_id+"""">
+                    <div class="legend-color"""+legend_id+"""" style="background-color: blue;"></div>
+                    <span>Phrasing</span>
+                </div>
+            </div>
+            """
+        ret_val = legend
+        return ret_val
         
