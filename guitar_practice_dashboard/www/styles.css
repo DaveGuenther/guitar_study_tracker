@@ -153,6 +153,11 @@ h3, h6 {
     color: #FFF8DC;
 }
 
+.chart-title {
+    color: #FFF8DC;
+    font-size:30px;
+}
+
 /* Sidebar background, border, and text formatting */
 .bslib-sidebar-layout>.sidebar{
     color: #dbcaa4;
@@ -238,6 +243,12 @@ iframe {
     width: 100%; /* change this to a fixed width, or create a container with a width. */
     height: 100%;
   }
+
+.legend-font{
+    font-family:garamond;
+    color:#Ff9b15;
+    font-size:10pt;
+}
 
 /*### Acoustic Arsenal ###*/
 /*Guitar Shelf Cards*/

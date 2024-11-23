@@ -381,6 +381,7 @@ def sessions_server(input, output, session):
         df_bar_summary = df_last_week.groupby('Song',as_index=False)[['Duration']].sum()
         num_bars = len(list(df_bar_summary['Song']))
         df_bar_summary = df_bar_summary.sort_values("Duration", ascending=True)
+
         fig = go.Figure(go.Bar(
             x=df_bar_summary['Duration'], 
             y=df_bar_summary['Song'], 

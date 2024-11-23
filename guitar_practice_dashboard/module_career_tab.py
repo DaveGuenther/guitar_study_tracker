@@ -22,7 +22,8 @@ Logger = logger.FunctionLogger
 df_sessions = globals.get_df_sessions()
 df_grindage = globals.get_df_song_grindage()
 df_song_grindage = df_grindage[df_grindage['Song Type']=='Song']
-df_exercise_grindage = df_grindage[df_grindage['Song Type']=='Exercise']
+df_exercise_grindage = df_sessions[df_sessions['Song Type']=='Exercise']
+
 
 def timestamp_to_date(this_timestamp: pd._libs.tslibs.timestamps._Timestamp):
     return date(this_timestamp.year, this_timestamp.month, this_timestamp.day)
@@ -40,13 +41,7 @@ def career_ui():
             ),
         )
     
-    ret_val = ui.nav_panel("Career",
-        #ui.sidebar(
-        #    ui.h4("Filters"),
-        #    filter_shelf(df_sessions),
-        #    width=300,
-        #),
-        
+    ret_val = ui.nav_panel("Career",        
         ui.row(
             ui.card(
                 ui.output_text(id="avg_practice_time").add_class('ban-text'),
@@ -75,10 +70,33 @@ def career_ui():
             ).add_class('ban-card'),                                                     
         ).add_class('ban-row'),
         ui.card(
+            ui.div("Time Spent Studying Songs").add_class('chart-title'),
+            ui.output_ui(id='song_grind_legend').add_class('legend-font'),
             output_widget(id='song_grindage_chart'),
-            ui.output_ui(id='song_grind_legend'),
-        ).add_class('dashboard-card'),        
+        ).add_class('dashboard-card'),     
+        ui.card(
+            ui.div("Time Spent Studying Exercises").add_class('chart-title'),
+            output_widget(id='exercise_grindage_chart'),
+        ).add_class('dashboard-card'),   
+        ui.div(class_='flex-blank'),
+            ui.h6(
+                ui.span("").add_class('flex-blank'),
+                #ui.div(ui.HTML(video_link)),
+                ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
+                ", 2024",
+                ui.span("").add_style("width:5px; display:inline;"),  
+                "|",
+                ui.span("").add_style("width:5px; display:inline;"),  
+                "Source Code:",
+                ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
+                ui.span("").add_style("width:5px; display:inline;"),
+                "|",
+                ui.span("").add_style("width:5px; display:inline;"),  
+                "Data Source:",
+                ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+            ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'), 
     )
+    
 
     return ret_val
 
@@ -131,8 +149,6 @@ def career_server(input, output, session):
 
     @render_widget
     def song_grindage_chart():
-        print("Hello")
-
         def make_stacked_bar_traces(dimension_a, dimension_b, field_3, dimension_a_unique_sort_order=None, dimension_b_unique_sort_order=None):
             """
             dimension_a, dimension_b  (str): column name of a dimension in the incoming dataframe.  These will be the rows and columns of the matrix that is built.
@@ -201,9 +217,8 @@ def career_server(input, output, session):
 
         stage_order = ['Learning Notes','Achieving Tempo','Phrasing','Maintenance']
         title_order = list(df_song_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
-        trace_dict = make_stacked_bar_traces(df_song_grindage['Title'], df_song_grindage['Stage'],df_song_grindage['Duration'], dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
+        trace_dict = make_stacked_bar_traces(df_song_grindage['Title'], df_song_grindage['Stage'],round((df_song_grindage['Duration']/60)*10)/10, dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
 
-        #category_colors={'Learning Notes':'#8400ff','Achieving Tempo':'#2980B9','Phrasing':'Green','Maintenance':'#6aa16a'}
         category_colors={'Learning Notes':['#801100',4],
                          'Achieving Tempo':['#d73502',3],
                          'Phrasing':['#ff7500',2],
@@ -214,6 +229,7 @@ def career_server(input, output, session):
                        y = trace_dict['dim_a_unique'], 
                        x=duration, orientation='h', 
                        legendrank=category_colors[stage][1],
+                       customdata=[stage for i in range(len(trace_dict['dim_a_unique']))],
                        marker=dict(
                            {
                                'color':category_colors[stage][0], # assign custom colors to each trace
@@ -224,26 +240,25 @@ def career_server(input, output, session):
         fig = go.Figure(data)
         fig.update_layout(barmode='stack')
 
+        fig.update_traces(
+            hovertemplate='Song: %{y}<br>Stage: %{customdata}<br>Practice Time (Hours): %{x}<extra></extra>',
+        )
+
         fig.update_layout(
-            margin=dict(t=42, b=0, l=0, r=0), # add space for title text
-            title=dict(text="Time Spent Studying Songs",font=dict(size=30, color="#FFF8DC"),yanchor='bottom', yref='paper'), 
-            
+            showlegend=False,
+
             # Main plot styling
             font_family='garamond',            
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)', # background for all area that is not the plot marks themselves
             xaxis_tickfont=dict(size=14), # y label styling
             yaxis_tickfont=dict(size=14), # x label styling
+            xaxis_gridcolor='#8c550c', # Vertical Tick Lines colored darker brown
+            xaxis_zerolinecolor='#8c550c', # X- Zero vertical tick line colord darker brown
 
             plot_bgcolor='rgba(0, 0, 0, 0)', # background for the actual plot area (plot marks themselves)
-        
-            legend=dict(
-            orientation="h",  # Horizontal orientation
-            yanchor="bottom",  # Anchor to bottom of plotspace
-            y=-0.3,  # Adjust vertical position -- I don't really understand the 'paper' coordinates here
-            xanchor="left",  # Center horizontally
-            #x=-2,  # Adjust horizontal position
-            )
+            height=20+(len(trace_dict['dim_a_unique'])*50),
+
         )
 
         fig.update_xaxes(
@@ -252,11 +267,16 @@ def career_server(input, output, session):
         figWidget = go.FigureWidget(fig)
         return figWidget
 
-    def custom_categorical_legend(legend_id, categories={'One':'red','Two':'Green','Three':'blue'}):
+    def custom_categorical_legend(legend_id, categories={'One':'red','Two':'Green','Three':'blue'},size=20, border_radius=5, border='1px solid black'):
+        """
+        
+        """
+        legend_id = str(legend_id)
         styles = """
             <style>
                 .legend"""+legend_id+""" {
                     display: flex;
+                    flex-wrap: wrap;
                     align-items: center;
                 }
 
@@ -268,11 +288,11 @@ def career_server(input, output, session):
                 }
 
                 .legend-color"""+legend_id+""" {
-                    width: 20px;
-                    height: 20px;
-                    border: 1px solid black;
+                    width: """+str(size)+"""px;
+                    height: """+str(size)+"""px;
+                    border: """+border+""";
                     margin-right: 5px;
-                    border-radius: 5px;
+                    border-radius: """+str(border_radius)+"""px;
                 }
             </style>
             """
@@ -300,43 +320,58 @@ def career_server(input, output, session):
                          'Maintenance':'#FAC000'}
         legend_id = str(globals.get_legend_id())
         legend = custom_categorical_legend(legend_id, category_colors)
-        ret_val = """
-            <style>
-                .legend"""+legend_id+""" {
-                    display: flex;
-                    align-items: center;
-                }
-
-                .legend-item"""+legend_id+""" {
-                    display: flex;
-                    align-items: center;
-                    margin-right: 10px;
-                    
-                }
-
-                .legend-color"""+legend_id+""" {
-                    width: 20px;
-                    height: 20px;
-                    border: 1px solid black;
-                    margin-right: 5px;
-                    border-radius: 5px;
-                }
-            </style>
-            <div class="legend"""+legend_id+"""">
-                <div class="legend-item"""+legend_id+"""">
-                    <div class="legend-color"""+legend_id+"""" style="background-color: red;"></div>
-                    <span>Learning Notes</span>
-                </div>
-                <div class="legend-item"""+legend_id+"""">
-                    <div class="legend-color"""+legend_id+"""" style="background-color: green;"></div>
-                    <span>Achieving Tempo</span>
-                </div>
-                <div class="legend-item"""+legend_id+"""">
-                    <div class="legend-color"""+legend_id+"""" style="background-color: blue;"></div>
-                    <span>Phrasing</span>
-                </div>
-            </div>
-            """
         ret_val = legend
         return ret_val
-        
+    
+    @render_widget
+    def exercise_grindage_chart():
+
+        ser_ex_bar_prep = df_exercise_grindage.groupby('Song')['Duration'].sum().sort_values()
+        titles=list(ser_ex_bar_prep.index)
+        durations = list(round((ser_ex_bar_prep/60)*10)/10)
+        round((df_song_grindage['Duration']/60)*10)/10
+
+        fig = go.Figure(go.Bar(
+            x=durations, 
+            y=titles, 
+            orientation='h',
+            marker=dict(cornerradius=30),         
+            ))      
+
+        fig.update_traces(
+            marker_color="#03A9F4",
+            hovertemplate='Exercise: %{y}<br>Practice Time (Hours): %{x}<extra></extra>',
+            #width=.5,
+        )
+        fig.update_layout(
+            dragmode=False,
+            modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
+            
+            # Main plot styling
+            font_family='garamond',
+            font_color='#Ff9b15',
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            
+            # Axis Label Size
+            yaxis_tickfont=dict(size=14),
+            xaxis_gridcolor='#8c550c', # Vertical Tick Lines colored darker brown
+            xaxis_zerolinecolor='#8c550c', # X- Zero vertical tick line colord darker brown
+
+            plot_bgcolor="rgba(0, 0, 0, 0)",
+            height=20+(len(titles)*50),
+
+            # Tooltip Styling
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Garamond",
+                bordercolor="black",
+                align="left"
+            ),
+        )
+        fig.update_xaxes(title_text='Hours')
+        fig.layout.xaxis.fixedrange = True
+        fig.layout.yaxis.fixedrange = True
+
+        figWidget = go.FigureWidget(fig)
+        return figWidget  
