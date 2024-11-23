@@ -259,6 +259,7 @@ iframe {
     aspect-ratio: 0.55;
     min-width: 350px;
     max-width: 550px;
+    overflow:hidden;
 }
 
 .guitar-card-image {

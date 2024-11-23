@@ -20,8 +20,15 @@ Logger = logger.FunctionLogger
 def arsenal_ui():
     ret_val = ui.nav_panel("Acoustic Arsenal",
         ui.div(
-            ui.card(ui.output_image(id="yamaha_cg1").add_class('guitar-card-image')).add_class('guitar-card'),
-            ui.card(ui.output_image(id="no_guitar_image").add_class('guitar-card-image')).add_class('guitar-card'),
+            ui.div(
+                ui.div("YAMAHA CG-101MS").add_class("chart-title").add_style('text-align:center;'),
+                ui.output_image(id="yamaha_cg1").add_class('guitar-card-image')
+            ).add_class('guitar-card'),
+            ui.div(
+                ui.div("YAMAHA C-245S").add_class("chart-title").add_style('text-align:center;'),
+                ui.output_image(id="yamaha_g245").add_class('guitar-card-image')
+            ).add_class('guitar-card'),
+            #ui.card(ui.output_image(id="no_guitar_image").add_class('guitar-card-image')).add_class('guitar-card'),
 
         ).add_class('flex-horizontal').add_style('flex-wrap:wrap; justify-content:center;'),
 
@@ -40,6 +47,13 @@ def arsenal_server(input, output, session):
         img: ImgData = {"src": str(dir / "www" / "YAMAHA-CG101MS.jpg"), "width":"100%"}
         return img
     
+    @render.image
+    def yamaha_g245():
+        dir = Path(__file__).resolve().parent
+        img: ImgData = {"src": str(dir / "www" / "YAMAHA-G245S.jpg"), "width":"100%"}
+        return img
+
+
     @render.image
     def no_guitar_image():
         dir = Path(__file__).resolve().parent
