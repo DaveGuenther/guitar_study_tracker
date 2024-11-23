@@ -358,7 +358,7 @@ def sessions_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=12,
+                font_size=14,
                 font_family="Garamond",
                 bordercolor="black",
                 align="left"
@@ -418,7 +418,7 @@ def sessions_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=12,
+                font_size=14,
                 font_family="Garamond",
                 bordercolor="black",
                 align="left"
@@ -458,7 +458,7 @@ def sessions_server(input, output, session):
                 # Tooltip Styling
                 hoverlabel=dict(
                     bgcolor="white",
-                    font_size=12,
+                    font_size=14,
                     font_family="Garamond",
                     bordercolor="black",
                     align="left"

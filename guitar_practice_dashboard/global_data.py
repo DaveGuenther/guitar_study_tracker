@@ -39,6 +39,9 @@ class GlobalData:
             style_model = DatabaseModel(orm.tbl_style, pg_session)
             song_model = DatabaseModel(orm.tbl_song, pg_session)
             session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
+            guitar_model = DatabaseModel(orm.tbl_guitar, pg_session)
+            song_goal_model = DatabaseModel(orm.tbl_song_goals, pg_session)
+            string_set_model = DatabaseModel(orm.tbl_string_set, pg_session)
 
             user_name = os.getenv('pg_user')
             pw = os.getenv('pg_pw')
@@ -47,7 +50,11 @@ class GlobalData:
             style_model.connect(user_name, pw, True)
             song_model.connect(user_name, pw, True)
             session_model.connect(user_name, pw, True)
-            
+            guitar_model.connect(user_name, pw, True)
+            song_goal_model.connect(user_name, pw, True)
+            string_set_model.connect(user_name, pw, True)
+
+            cls._df_arsenal = data_prep.processArsenalData(guitar_model, string_set_model)
             cls._df_sessions, cls._df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
             cls._df_song_grindage = data_prep.processSongGrindageData(cls._df_sessions, session_model, song_model)
 
@@ -66,6 +73,9 @@ class GlobalData:
     
     def get_df_song_grindage(self):
         return self._df_song_grindage
+    
+    def get_df_arsenal(self):
+        return self._df_arsenal
 
     def increment_legend_id(self):
         """Call this before adding a new legend object"""

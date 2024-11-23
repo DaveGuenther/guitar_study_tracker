@@ -259,6 +259,15 @@ def career_server(input, output, session):
             plot_bgcolor='rgba(0, 0, 0, 0)', # background for the actual plot area (plot marks themselves)
             height=20+(len(trace_dict['dim_a_unique'])*50),
 
+            # Tooltip Styling
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=14,
+                font_family="Garamond",
+                bordercolor="black",
+                align="left"
+            ),
+
         )
 
         fig.update_xaxes(
@@ -363,7 +372,7 @@ def career_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=12,
+                font_size=14,
                 font_family="Garamond",
                 bordercolor="black",
                 align="left"

@@ -4,6 +4,13 @@ import datetime
 import pytz
 import calendar
 
+def processArsenalData(guitar_model, string_set_model):
+    df_guitar_raw = guitar_model.df_raw
+    df_string_raw = string_set_model.df_raw
+    df_guitar_string_raw = df_guitar_raw.merge(df_string_raw,how='left',left_on='string_set_id',right_on='id')
+    df_guitar_string_raw = df_guitar_string_raw.drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
+    return df_guitar_string_raw
+
 def processData(session_data, song_data, artist_data, style_data):
 
     def get_week_number(date):

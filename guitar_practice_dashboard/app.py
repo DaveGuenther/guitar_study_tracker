@@ -26,8 +26,7 @@ import logger
 Logger = logger.FunctionLogger
 Logger.setLogger(True) # turn off the shinylogger
 
-df_sessions = globals.get_df_sessions()
-df_365 = globals.get_df_365()
+
 
 app_ui = ui.page_fluid(
         ui.head_content(
