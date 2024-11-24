@@ -30,8 +30,8 @@ tbl_style = Table(
     schema=schema,
 )
 
-tbl_song = Table(
-    'song',
+tbl_arrangement = Table(
+    'arrangement',
     metadata,
     Column('id', Integer, nullable=False,),
     Column('title', Text, nullable=False),
@@ -42,7 +42,7 @@ tbl_song = Table(
     Column('style_id', Text, nullable=True), # foreign key to style.id
     Column('composer', Integer, nullable=True), # foreign key to artist.id
     Column('arranger', Integer, nullable=True), # foreign key to artist.id (writers and arrangers can be the same person)
-    Column('song_type', Text, nullable=True),
+    Column('arrangement_type', Text, nullable=True),
     schema=schema,
 )
 
@@ -53,7 +53,7 @@ tbl_practice_session = Table(
     Column('session_date', Date, nullable=False),
     Column('duration', Integer, nullable=False),
     Column('guitar_id', Integer, nullable=False), # foreign key to guitar.id
-    Column('l_song_id', Integer, nullable=False), # foreign key to song.id
+    Column('l_arrangement_id', Integer, nullable=False), # foreign key to arrangement.id
     Column('notes', Text, nullable=True),
     Column('video_url', Text, nullable=True),
     Column('stage', Text, nullable=True),
@@ -77,11 +77,11 @@ tbl_guitar = Table(
     schema=schema,
 )
 
-tbl_song_goals = Table(
-    'song_goals',
+tbl_arrangement_goals = Table(
+    'arrangement_goals',
     metadata,
     Column('id', Integer, nullable=False),
-    Column('song_id', Integer, nullable=False), # foreign key to song.id
+    Column('arrangement_id', Integer, nullable=False), # foreign key to arrangement.id
     Column('discovery_date', Date, nullable=False),
     Column('description', Text, nullable=True),
     schema=schema,

@@ -3,7 +3,7 @@ class ShinyInputTableModel(ABC):
     This class will make use of DatabaseTableModels to establish more complete table representation for user form input (including where necessary bringing in lookup tables to resolve lookup ids in the primary table).  It also contains specific UI components required for the inpurt form modal.
     """
 
-    _namespace_id=None # used as prefix for the shiny module (e.g. 'artist','song')
+    _namespace_id=None # used as prefix for the shiny module (e.g. 'artist','arrangement')
 
     @abstractmethod
     def processData():

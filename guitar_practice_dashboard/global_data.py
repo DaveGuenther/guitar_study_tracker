@@ -14,9 +14,9 @@ class GlobalData:
     """
     # used for singleton pattern
     _instance=None
-    _df_sessions=None # General sessions data to understand time spent playing songs
+    _df_sessions=None # General sessions data to understand time spent playing arrangements
     _df_365=None # Dataset used to build the waffle chart on the main page
-    _df_song_grindage=None # Dataset that is used to build 
+    _df_arrangement_grindage=None # Dataset that is used to build 
 
     _legend_id=0 # Used add as suffix to CSS class names for custom chart legends that are disconnected entirely from their plotly figures
 
@@ -37,10 +37,10 @@ class GlobalData:
             # Create object relational mappings for the three database tables
             artist_model = DatabaseModel(orm.tbl_artist, pg_session)
             style_model = DatabaseModel(orm.tbl_style, pg_session)
-            song_model = DatabaseModel(orm.tbl_song, pg_session)
+            arrangement_model = DatabaseModel(orm.tbl_arrangement, pg_session)
             session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
             guitar_model = DatabaseModel(orm.tbl_guitar, pg_session)
-            song_goal_model = DatabaseModel(orm.tbl_song_goals, pg_session)
+            arrangement_goal_model = DatabaseModel(orm.tbl_arrangement_goals, pg_session)
             string_set_model = DatabaseModel(orm.tbl_string_set, pg_session)
 
             user_name = os.getenv('pg_user')
@@ -48,15 +48,15 @@ class GlobalData:
 
             artist_model.connect(user_name, pw, True)
             style_model.connect(user_name, pw, True)
-            song_model.connect(user_name, pw, True)
+            arrangement_model.connect(user_name, pw, True)
             session_model.connect(user_name, pw, True)
             guitar_model.connect(user_name, pw, True)
-            song_goal_model.connect(user_name, pw, True)
+            arrangement_goal_model.connect(user_name, pw, True)
             string_set_model.connect(user_name, pw, True)
 
             cls._df_arsenal = data_prep.processArsenalData(session_model, guitar_model, string_set_model)
-            cls._df_sessions, cls._df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
-            cls._df_song_grindage = data_prep.processSongGrindageData(cls._df_sessions, session_model, song_model)
+            cls._df_sessions, cls._df_365 = data_prep.processData(session_model, arrangement_model, artist_model, style_model)
+            cls._df_arrangement_grindage = data_prep.processArrangementGrindageData(cls._df_sessions, session_model, arrangement_model)
 
         return cls._instance
 
@@ -71,8 +71,8 @@ class GlobalData:
     def get_df_365(self):
         return self._df_365
     
-    def get_df_song_grindage(self):
-        return self._df_song_grindage
+    def get_df_arrangement_grindage(self):
+        return self._df_arrangement_grindage
     
     def get_df_arsenal(self):
         return self._df_arsenal

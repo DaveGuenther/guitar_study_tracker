@@ -20,9 +20,9 @@ Logger = logger.FunctionLogger
 
 
 df_sessions = globals.get_df_sessions()
-df_grindage = globals.get_df_song_grindage()
-df_song_grindage = df_grindage[df_grindage['Song Type']=='Song']
-df_exercise_grindage = df_sessions[df_sessions['Song Type']=='Exercise']
+df_grindage = globals.get_df_arrangement_grindage()
+df_arrangement_grindage = df_grindage[df_grindage['Arrangement Type']=='Song']
+df_exercise_grindage = df_sessions[df_sessions['Arrangement Type']=='Exercise']
 
 
 def timestamp_to_date(this_timestamp: pd._libs.tslibs.timestamps._Timestamp):
@@ -70,9 +70,9 @@ def career_ui():
             ).add_class('ban-card'),                                                     
         ).add_class('ban-row'),
         ui.card(
-            ui.div("Time Spent Studying Songs").add_class('chart-title'),
-            ui.output_ui(id='song_grind_legend').add_class('legend-font'),
-            output_widget(id='song_grindage_chart'),
+            ui.div("Time Spent Studying Arrangements").add_class('chart-title'),
+            ui.output_ui(id='arrangement_grind_legend').add_class('legend-font'),
+            output_widget(id='arrangement_grindage_chart'),
         ).add_class('dashboard-card'),     
         ui.card(
             ui.div("Time Spent Studying Exercises").add_class('chart-title'),
@@ -148,7 +148,7 @@ def career_server(input, output, session):
 
 
     @render_widget
-    def song_grindage_chart():
+    def arrangement_grindage_chart():
         def make_stacked_bar_traces(dimension_a, dimension_b, field_3, dimension_a_unique_sort_order=None, dimension_b_unique_sort_order=None):
             """
             dimension_a, dimension_b  (str): column name of a dimension in the incoming dataframe.  These will be the rows and columns of the matrix that is built.
@@ -216,8 +216,8 @@ def career_server(input, output, session):
 
 
         stage_order = ['Learning Notes','Achieving Tempo','Phrasing','Maintenance']
-        title_order = list(df_song_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
-        trace_dict = make_stacked_bar_traces(df_song_grindage['Title'], df_song_grindage['Stage'],round((df_song_grindage['Duration']/60)*10)/10, dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
+        title_order = list(df_arrangement_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
+        trace_dict = make_stacked_bar_traces(df_arrangement_grindage['Title'], df_arrangement_grindage['Stage'],round((df_arrangement_grindage['Duration']/60)*10)/10, dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
 
         category_colors={'Learning Notes':['#801100',4],
                          'Achieving Tempo':['#d73502',3],
@@ -241,7 +241,7 @@ def career_server(input, output, session):
         fig.update_layout(barmode='stack')
 
         fig.update_traces(
-            hovertemplate='Song: %{y}<br>Stage: %{customdata}<br>Practice Time (Hours): %{x}<extra></extra>',
+            hovertemplate='Arrangement: %{y}<br>Stage: %{customdata}<br>Practice Time (Hours): %{x}<extra></extra>',
         )
 
         fig.update_layout(
@@ -322,7 +322,7 @@ def career_server(input, output, session):
         return styles+legend
 
     @render.text
-    def song_grind_legend():
+    def arrangement_grind_legend():
         category_colors={'Learning Notes':'#801100',
                          'Achieving Tempo':'#d73502',
                          'Phrasing':'#ff7500',
@@ -335,10 +335,10 @@ def career_server(input, output, session):
     @render_widget
     def exercise_grindage_chart():
 
-        ser_ex_bar_prep = df_exercise_grindage.groupby('Song')['Duration'].sum().sort_values()
+        ser_ex_bar_prep = df_exercise_grindage.groupby('Arrangement')['Duration'].sum().sort_values()
         titles=list(ser_ex_bar_prep.index)
         durations = list(round((ser_ex_bar_prep/60)*10)/10)
-        round((df_song_grindage['Duration']/60)*10)/10
+        round((df_arrangement_grindage['Duration']/60)*10)/10
 
         fig = go.Figure(go.Bar(
             x=durations, 

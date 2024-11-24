@@ -10,7 +10,7 @@ from shiny import App, ui, render, reactive, types, req, module
 # App Specific Code
 import orm # database models
 from database import DatabaseSession, DatabaseModel
-from data_processing import ArtistInputTableModel, StyleInputTableModel, SongInputTableModel, SessionInputTableModel, StringSetInputTableModel, SongGoalInputTableModel, GuitarInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
+from data_processing import ArtistInputTableModel, StyleInputTableModel, ArrangementInputTableModel, SessionInputTableModel, StringSetInputTableModel, ArrangementGoalInputTableModel, GuitarInputTableModel # contains processed data payloads for each modular table in this app (use data_processing.shiny_data_payload dictionary)
 from table_navigator import ShinyFormTemplate
 
 #logging.basicConfig(filename='myapp.log', level=logging.INFO)
@@ -28,10 +28,10 @@ pg_session = DatabaseSession(
 # Create object relational mappings for the three database tables
 artist_model = DatabaseModel(orm.tbl_artist,pg_session)
 style_model = DatabaseModel(orm.tbl_style, pg_session)
-song_model = DatabaseModel(orm.tbl_song, pg_session)
+arrangement_model = DatabaseModel(orm.tbl_arrangement, pg_session)
 session_model = DatabaseModel(orm.tbl_practice_session, pg_session)
 string_set_model = DatabaseModel(orm.tbl_string_set, pg_session)
-song_goal_model = DatabaseModel(orm.tbl_song_goals, pg_session)
+arrangement_goal_model = DatabaseModel(orm.tbl_arrangement_goals, pg_session)
 guitar_model = DatabaseModel(orm.tbl_guitar, pg_session)
 
 # Establish schema specific table models (tying together their lookups)
@@ -48,16 +48,16 @@ style_input_table_model = StyleInputTableModel(namespace_id = 'style',
                                                title='Style',
                                                db_table_model=style_model)
 
-song_input_table_model = SongInputTableModel(namespace_id = 'song', 
-                                            title="Song", 
-                                            db_table_model=song_model,
+arrangement_input_table_model = ArrangementInputTableModel(namespace_id = 'arrangement', 
+                                            title="Arrangement", 
+                                            db_table_model=arrangement_model,
                                             db_artist_model=artist_model, #required lookup
                                             db_style_model=style_model) #required lookup
 
-song_goal_input_table_model = SongGoalInputTableModel(namespace_id='song_goal',
-                                                      title="Song Goals", 
-                                                      db_table_model=song_goal_model,
-                                                      db_song_model=song_model, 
+arrangement_goal_input_table_model = ArrangementGoalInputTableModel(namespace_id='arrangement_goal',
+                                                      title="Arrangement Goals", 
+                                                      db_table_model=arrangement_goal_model,
+                                                      db_arrangement_model=arrangement_model, 
                                                       db_artist_model=artist_model)
 
 guitar_input_table_model = GuitarInputTableModel(namespace_id='guitar',
@@ -68,7 +68,7 @@ guitar_input_table_model = GuitarInputTableModel(namespace_id='guitar',
 session_input_table_model = SessionInputTableModel(namespace_id = 'session', 
                                             title="Session", 
                                             db_table_model=session_model,
-                                            db_song_model=song_model, # required lookup
+                                            db_arrangement_model=arrangement_model, # required lookup
                                             db_artist_model=artist_model, # required lookup
                                             db_guitar_model=guitar_model) # required lookup
 
@@ -77,9 +77,9 @@ session_input_table_model = SessionInputTableModel(namespace_id = 'session',
 string_set_form_template = ShinyFormTemplate('string_set',string_set_input_table_model)
 artist_form_template = ShinyFormTemplate('artist',artist_input_table_model)
 style_form_template = ShinyFormTemplate('style',style_input_table_model)
-song_form_template = ShinyFormTemplate('song',song_input_table_model)
+arrangement_form_template = ShinyFormTemplate('arrangement',arrangement_input_table_model)
 session_form_template = ShinyFormTemplate('session',session_input_table_model)
-song_goal_form_template = ShinyFormTemplate('song_goal', song_goal_input_table_model)
+arrangement_goal_form_template = ShinyFormTemplate('arrangement_goal', arrangement_goal_input_table_model)
 guitar_form_template = ShinyFormTemplate('guitar',guitar_input_table_model)
 
 app_ui = ui.page_fluid(
@@ -121,23 +121,26 @@ def server(input, output, session):
                 pw = os.getenv('pg_pw')
                 read_only_acct=True
 
+            user_name='open_wr.rlkwpbwcrorduznnwxdq'
+            pw='A6^h70ZK_bQQ'
+            read_only_acct=False
 
         # connect to database
         string_set_model.connect(user_name, pw, read_only_acct)
         artist_model.connect(user_name, pw, read_only_acct)
         style_model.connect(user_name, pw, read_only_acct)
-        song_model.connect(user_name, pw, read_only_acct)
+        arrangement_model.connect(user_name, pw, read_only_acct)
         session_model.connect(user_name, pw, read_only_acct)
-        song_goal_model.connect(user_name, pw, read_only_acct)
+        arrangement_goal_model.connect(user_name, pw, read_only_acct)
         guitar_model.connect(user_name, pw, read_only_acct)
 
         # begin data processing in artist table navigator
         string_set_input_table_model.processData()
         artist_input_table_model.processData()
         style_input_table_model.processData()
-        song_input_table_model.processData()
+        arrangement_input_table_model.processData()
         session_input_table_model.processData()
-        song_goal_input_table_model.processData()
+        arrangement_goal_input_table_model.processData()
         guitar_input_table_model.processData()
 
         # remove user/pw screen
@@ -152,16 +155,16 @@ def server(input, output, session):
                 ui.nav_panel("Sessions", 
                     session_form_template.ui_call(),
                 ), 
-                ui.nav_panel("Songs",
-                    song_form_template.ui_call(),
+                ui.nav_panel("Arrangements",
+                    arrangement_form_template.ui_call(),
                 ),
                 
                 ui.nav_panel("Artists", 
                     artist_form_template.ui_call(),
                 ),           
 
-                ui.nav_panel("Song Goals", 
-                    song_goal_form_template.ui_call(),
+                ui.nav_panel("Arrangement Goals", 
+                    arrangement_goal_form_template.ui_call(),
                 ),                            
 
                 ui.nav_panel("Music Styles", 
@@ -187,9 +190,9 @@ def server(input, output, session):
         string_set_form_template.server_call(input, output, session)
         artist_form_template.server_call(input, output, session)
         style_form_template.server_call(input, output, session)
-        song_form_template.server_call(input, output, session)
+        arrangement_form_template.server_call(input, output, session)
         session_form_template.server_call(input, output, session)  
-        song_goal_form_template.server_call(input, output, session)  
+        arrangement_goal_form_template.server_call(input, output, session)  
         guitar_form_template.server_call(input, output, session)
 
 

@@ -42,7 +42,7 @@ def processArsenalData(session_model, guitar_model, string_set_model):
 
     return df_guitar_string_raw
 
-def processData(session_data, song_data, artist_data, style_data):
+def processData(session_data, arrangement_data, artist_data, style_data):
 
     def get_week_number(date):
         # Set the first day of the week to Sunday
@@ -61,31 +61,31 @@ def processData(session_data, song_data, artist_data, style_data):
     today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
 
     df_raw_session = session_data.df_raw
-    df_raw_song = song_data.df_raw
+    df_raw_arrangement = arrangement_data.df_raw
     df_raw_artist = artist_data.df_raw
     df_raw_style = style_data.df_raw
     df_raw_artist['last_name']=df_raw_artist['name'].str.split(' ').str[-1] # name is spelled "first last"
-    df_raw_song['style_id'] = df_raw_song['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
-    df_raw_song['composer'] = df_raw_song['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
-    df_raw_song['arranger'] = df_raw_song['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
-    df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
-    df_resolved_song = df_resolved_song.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
-    df_resolved_song = df_resolved_song.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['style_id','id_y'], axis=1).rename({'id_x':'id', 'style':'Style'},axis=1)
-    df_resolved_song['Start Date'] = pd.to_datetime(df_resolved_song['start_date']).dt.strftime("%m/%d/%Y")
-    df_resolved_song['Off Book Date'] = pd.to_datetime(df_resolved_song['off_book_date']).dt.strftime("%m/%d/%Y")
-    df_resolved_song['Play Ready Date'] = pd.to_datetime(df_resolved_song['play_ready_date']).dt.strftime("%m/%d/%Y")
-    df_resolved_song = df_resolved_song.rename({'title':'Title'},axis=1)
-    df_resolved_sessions = df_raw_session.merge(df_resolved_song,how='left', left_on='l_song_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+    df_raw_arrangement['style_id'] = df_raw_arrangement['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+    df_raw_arrangement['composer'] = df_raw_arrangement['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
+    df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+    df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
+    df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+    df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['style_id','id_y'], axis=1).rename({'id_x':'id', 'style':'Style'},axis=1)
+    df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
+    df_resolved_arrangement['Off Book Date'] = pd.to_datetime(df_resolved_arrangement['off_book_date']).dt.strftime("%m/%d/%Y")
+    df_resolved_arrangement['Play Ready Date'] = pd.to_datetime(df_resolved_arrangement['play_ready_date']).dt.strftime("%m/%d/%Y")
+    df_resolved_arrangement = df_resolved_arrangement.rename({'title':'Title'},axis=1)
+    df_resolved_sessions = df_raw_session.merge(df_resolved_arrangement,how='left', left_on='l_arrangement_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
     
     # Establish empty records for every day in the past 365 days to serve as a scaffold for the heatmap table - in the event that all data is filtered out, the structure will be retained
     df_zeros = pd.DataFrame({'session_date':pd.date_range(today-pd.DateOffset(days=365),today),'duration':np.zeros(len(pd.date_range(today-pd.DateOffset(days=365),today)))})
     df_resolved_sessions['session_date'] = pd.to_datetime(df_resolved_sessions['session_date'])
     df_resolved_sessions = pd.concat([df_resolved_sessions,df_zeros]).reset_index()
     df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
-    df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','stage':'Stage','video_url':'Video URL','song_type':'Song Type'},axis=1)
+    df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Arrangement','stage':'Stage','video_url':'Video URL','arrangement_type':'Arrangement Type'},axis=1)
     
     # Collect date parts of the session_date for use in various visuals
-    df_summary = df_resolved_sessions[['id', 'Session Date','session_date','Stage', 'Duration', 'Song','Song Type','Style','l_song_id','Composer','Arranger','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
+    df_summary = df_resolved_sessions[['id', 'Session Date','session_date','Stage', 'Duration', 'Arrangement','Arrangement Type','Style','l_arrangement_id','Composer','Arranger','Notes', 'Video URL']].sort_values('Session Date', ascending=False)
     #df_summary['URL_provided'] = df_summary['Video URL'].apply(lambda observation: True if observation else False)
     df_summary['session_date'] = pd.to_datetime(df_summary['session_date'])
     df_summary['Year'] = df_summary['session_date'].dt.isocalendar().year
@@ -114,15 +114,15 @@ def processData(session_data, song_data, artist_data, style_data):
     df_summary=df_summary[df_summary['id'].notna()] #for the cumulative data since inception
     return df_summary, df_365
 
-def processSongGrindageData(df_sessions, session_model, song_model):
-    #df_songs = song_model.df_raw
-    #df_sessions = df_sessions[df_sessions['Song Type']=='Song']
+def processArrangementGrindageData(df_sessions, session_model, arrangement_model):
+    #df_arrangements = arrangement_model.df_raw
+    #df_sessions = df_sessions[df_sessions['Arrangement Type']=='Song']
 
-    #df_sessions_expanded = df_sessions.merge(df_songs[['id','start_date','off_book_date','at_tempo_date','play_ready_date']], how='left', left_on='l_song_id', right_on='id').drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
+    #df_sessions_expanded = df_sessions.merge(df_arrangements[['id','start_date','off_book_date','at_tempo_date','play_ready_date']], how='left', left_on='l_arrangement_id', right_on='id').drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
     df_sessions = session_model.df_raw
-    df_songs = song_model.df_raw
-    df_grindage = df_sessions.groupby(['l_song_id','stage'])[['duration']].sum().reset_index()
-    df_grindage = df_grindage.merge(df_songs, how='left',left_on='l_song_id',right_on='id')
+    df_arrangements = arrangement_model.df_raw
+    df_grindage = df_sessions.groupby(['l_arrangement_id','stage'])[['duration']].sum().reset_index()
+    df_grindage = df_grindage.merge(df_arrangements, how='left',left_on='l_arrangement_id',right_on='id')
     today = datetime.datetime.now(pytz.timezone('US/Eastern')).date()
     df_grindage['today']= today
     def getStageStartDates(row):
@@ -146,8 +146,8 @@ def processSongGrindageData(df_sessions, session_model, song_model):
     df_grindage['Start Date'] = df_grindage.apply(getStageStartDates, axis=1)
     df_grindage['End Date'] = df_grindage.apply(getStageEndDates, axis=1)
     df_grindage['End Date'] = df_grindage['End Date'].fillna(today)
-    df_grindage = df_grindage.rename({'stage':'Stage','duration':'Duration','title':'Title','composer':'Composer','arranger':'Arranger','song_type':'Song Type'},axis=1)
-    df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Song Type','Start Date','End Date']]
+    df_grindage = df_grindage.rename({'stage':'Stage','duration':'Duration','title':'Title','composer':'Composer','arranger':'Arranger','arrangement_type':'Arrangement Type'},axis=1)
+    df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Arrangement Type','Start Date','End Date']]
     return df_grindage
 
     
