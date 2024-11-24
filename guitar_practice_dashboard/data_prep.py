@@ -10,17 +10,36 @@ def processArsenalData(session_model, guitar_model, string_set_model):
     df_session_raw = session_model.df_raw
     df_guitar_string_raw = df_guitar_raw.merge(df_string_raw,how='left',left_on='string_set_id',right_on='id')
     df_guitar_string_raw = df_guitar_string_raw.drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
-    def get_string_health(df_subset):
-        install_date = df_subset['session_date'].min()
-        hrs_on_strings = df_subset['duration'].sum()/60
-        days_on_strings = (datetime.date.today()-install_date).days
+    def get_string_health(df_subset, install_date):
+        if df_subset.shape[0]>0:
+            #install_date = df_subset['session_date'].min()
+            hrs_on_strings = df_subset['duration'].sum()/60
+        else:
+            #install_date = None
+            hrs_on_strings= 0
+            
+        days_on_strings=(datetime.date.today()-install_date).days
         string_health = 1-max((hrs_on_strings/60),(days_on_strings/112))
         decay_slope = (string_health-1)/(days_on_strings-0)
-        expected_string_expiration_duration = int(-1/decay_slope)
-        expiration_date = install_date+datetime.timedelta(days=expected_string_expiration_duration)
-        return a lot of things!
+        expected_string_expiration_duration = int(-1/decay_slope)-days_on_strings
+        expiration_date = datetime.date.today()+datetime.timedelta(days=expected_string_expiration_duration)
 
-    helllo = df_guitar_string_raw.apply(lambda row: get_string_health(df_session_raw[(df_session_raw['session_date']>=row['strings_install_date'])&(df_session_raw['guitar_id']==row['id'])]),axis=1)
+        return pd.Series([hrs_on_strings,
+                         days_on_strings,
+                         string_health,
+                         expected_string_expiration_duration,
+                         expiration_date])
+    
+    df_guitar_string_raw[['hours_on_strings',
+                          'days_on_strings',
+                          'string_health',
+                          'expected_days_left',
+                          'expiration_date']] = df_guitar_string_raw.apply(lambda row: get_string_health(df_session_raw[
+                              (df_session_raw['session_date']>=row['strings_install_date'])&
+                              (df_session_raw['guitar_id']==row['id'])], row['strings_install_date']),axis=1)
+
+    df_guitar_string_raw['hours_on_guitar'] = df_guitar_string_raw.apply(lambda row: df_session_raw[df_session_raw['guitar_id']==row['id']]['duration'].sum()/60, axis=1)
+
     return df_guitar_string_raw
 
 def processData(session_data, song_data, artist_data, style_data):
