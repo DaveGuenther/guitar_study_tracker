@@ -54,7 +54,7 @@ class GlobalData:
             song_goal_model.connect(user_name, pw, True)
             string_set_model.connect(user_name, pw, True)
 
-            cls._df_arsenal = data_prep.processArsenalData(guitar_model, string_set_model)
+            cls._df_arsenal = data_prep.processArsenalData(session_model, guitar_model, string_set_model)
             cls._df_sessions, cls._df_365 = data_prep.processData(session_model, song_model, artist_model, style_model)
             cls._df_song_grindage = data_prep.processSongGrindageData(cls._df_sessions, session_model, song_model)
 

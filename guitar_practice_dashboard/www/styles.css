@@ -262,6 +262,22 @@ iframe {
     overflow:hidden;
 }
 
+.guitar-tooltip {
+    font-family:garamond;
+    text-align:left;
+    font-size:12pt;
+    color: #beb8a4;
+}
+
+.guitar-tooltip-title {
+    font-weight:900;
+    color: #FFF8DC;
+}
+
+.tooltip {
+    --bs-tooltip-max-width:350px;
+}
+
 .guitar-card-image {
     object-fit:fill;
 }

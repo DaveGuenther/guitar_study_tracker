@@ -4,11 +4,23 @@ import datetime
 import pytz
 import calendar
 
-def processArsenalData(guitar_model, string_set_model):
+def processArsenalData(session_model, guitar_model, string_set_model):
     df_guitar_raw = guitar_model.df_raw
     df_string_raw = string_set_model.df_raw
+    df_session_raw = session_model.df_raw
     df_guitar_string_raw = df_guitar_raw.merge(df_string_raw,how='left',left_on='string_set_id',right_on='id')
     df_guitar_string_raw = df_guitar_string_raw.drop('id_y',axis=1).rename({'id_x':'id'},axis=1)
+    def get_string_health(df_subset):
+        install_date = df_subset['session_date'].min()
+        hrs_on_strings = df_subset['duration'].sum()/60
+        days_on_strings = (datetime.date.today()-install_date).days
+        string_health = 1-max((hrs_on_strings/60),(days_on_strings/112))
+        decay_slope = (string_health-1)/(days_on_strings-0)
+        expected_string_expiration_duration = int(-1/decay_slope)
+        expiration_date = install_date+datetime.timedelta(days=expected_string_expiration_duration)
+        return a lot of things!
+
+    helllo = df_guitar_string_raw.apply(lambda row: get_string_health(df_session_raw[(df_session_raw['session_date']>=row['strings_install_date'])&(df_session_raw['guitar_id']==row['id'])]),axis=1)
     return df_guitar_string_raw
 
 def processData(session_data, song_data, artist_data, style_data):

@@ -72,6 +72,7 @@ tbl_guitar = Table(
     Column('image_link', Integer, nullable=True),
     Column('date_added', Date, nullable=True),
     Column('date_retired', Date, nullable=True),
+    Column('strings_install_date', Date, nullable=True),
     Column('default_guitar',Boolean, nullable=True),
     schema=schema,
 )
