@@ -317,13 +317,12 @@ class StyleInputTableModel(ShinyInputTableModel):
 
         return input_form_func(self._namespace_id, summary_df)
 
-
-class ArrangementInputTableModel(ShinyInputTableModel):    
+class SongInputTableModel(ShinyInputTableModel):    
 
     __db_artist_model=None
     __artist_lookup=None
     __style_lookup=None
-    __arrangement_type_lookup={'Arrangement':'Arrangement','Exercise':'Exercise'} # Too lazy to make a lookup table for two values.  I'll do it is there's ever a third type
+    __song_type_lookup={'Song':'Song','Exercise':'Exercise'} # Too lazy to make a lookup table for two values.  I'll do it is there's ever a third type
 
     def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_artist_model:database.DatabaseModel, db_style_model:database.DatabaseModel):
         self._namespace_id=namespace_id
@@ -333,22 +332,16 @@ class ArrangementInputTableModel(ShinyInputTableModel):
         self.__db_style_model = db_style_model
 
     def processData(self):
-        # There is more complex logic required to process the Arrangement dataframe because it has the artist lookup field to worry about
-        df_raw_arrangement = self._db_table_model.df_raw
+        # There is more complex logic required to process the Song dataframe because it has the artist lookup field to worry about
+        df_raw_song = self._db_table_model.df_raw
         df_raw_artist = self.__db_artist_model.df_raw
         df_raw_style = self.__db_style_model.df_raw
-        df_raw_arrangement['style_id'] = df_raw_arrangement['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
-        df_raw_arrangement['composer'] = df_raw_arrangement['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
-        df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
-        df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
-        df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
-        df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['style_id','id_y'], axis=1).rename({'id_x':'id', 'style':'Style'},axis=1)
-        df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
-        df_resolved_arrangement['At Tempo Date'] = pd.to_datetime(df_resolved_arrangement['at_tempo_date']).dt.strftime("%m/%d/%Y")
-        df_resolved_arrangement['Off Book Date'] = pd.to_datetime(df_resolved_arrangement['off_book_date']).dt.strftime("%m/%d/%Y")
-        df_resolved_arrangement['Play Ready Date'] = pd.to_datetime(df_resolved_arrangement['play_ready_date']).dt.strftime("%m/%d/%Y")
-        df_resolved_arrangement = df_resolved_arrangement.rename({'title':'Title', 'arrangement_type':'Arrangement Type'},axis=1).sort_values(['last_name','Title'])
-        self.df_summary = df_resolved_arrangement[['id','Title','Composer','Arrangement Type','Style','Start Date','Off Book Date','At Tempo Date','Play Ready Date']]
+        df_raw_song['style_id'] = df_raw_song['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_raw_song['composer_id'] = df_raw_song['composer_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer_id', right_on='id').drop(['composer_id','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        df_resolved_song = df_resolved_song.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['style_id','id_y'], axis=1).rename({'id_x':'id', 'style':'Style'},axis=1)
+        df_resolved_song = df_resolved_song.rename({'title':'Title', 'song_type':'Song Type'},axis=1).sort_values(['last_name','Title'])
+        self.df_summary = df_resolved_song[['id','Title','Composer','Song Type','Style']]
 
 
         # Establish artist lookup
@@ -371,20 +364,20 @@ class ArrangementInputTableModel(ShinyInputTableModel):
             # User selected New
             return None
 
-    def __init_arrangement_type(self):
-        # provide initial value for the arrangement_type field of the input form
+    def __init_song_type(self):
+        # provide initial value for the song_type field of the input form
         if self._df_selected_id:
-            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['arrangement_type'].values[0])
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['song_type'].values[0])
         else:
             # User selected New
             return None
         
 
     def __init_composer(self):
-        # provide initial value for the arranger lookup field of the input form
+        # provide initial value for the composer lookup field of the input form
         if self._df_selected_id: 
             # User selected Update
-            artist_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['composer'].values[0]
+            artist_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['composer_id'].values[0]
             if pd.isna(artist_id):
                 return '' # Update a record with a null artist id
 
@@ -396,6 +389,173 @@ class ArrangementInputTableModel(ShinyInputTableModel):
             # User selected New
             return '' # New Record, there is no value   
   
+
+    def __init_style(self):
+        # provide initial value for the style lookup field of the input form
+        if self._df_selected_id: 
+            # User selected Update
+            style_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['style_id'].values[0]
+            if pd.isna(style_id):
+                return '' # Update a record with a null artist id
+
+            else:
+                if (not math.isnan(style_id)):
+                    return int(style_id) # Update a record with a non-null artist selection
+                '' # Update a record with a null artist id
+        else:
+            # User selected New
+            return '' # New Record, there is no value    
+         
+    def _ui_specific_code(self):
+        """
+        Song Modal Form UI code goes here
+        """
+        return ui.row(
+            ui.div(self._init_id_text()),
+            ui.input_text(id="title",label=f"{self._title} Title *", value=self.__init_title()).add_style('color:red;'), # REQUIRED VALUE
+            ui.input_select(id='song_type', label="Song Type", choices=self.__song_type_lookup, selected=self.__init_song_type()),
+            ui.input_select(id='style',label="Style", choices=self.__style_lookup, selected=self.__init_style()),
+            ui.input_select(id="composer",label="Composer",choices=self.__artist_lookup, selected=self.__init_composer()),
+        ),
+
+    def server_call(self, input, output, session, summary_df):
+        """
+        Song Modal Form Server code goes here
+        """
+
+        @module.server
+        def input_form_func(input, output, session, summary_df):
+
+            output_name = reactive.value('')
+            data_validation_msg = reactive.value('')
+
+            @reactive.effect
+            @reactive.event(input.btn_input_form_submit, ignore_init=True, ignore_none=True)
+            def triggerInputFormSubmit():
+                # Perform Data Validation and msg if issues
+                try:
+                    req(input.title())
+                except:
+                    data_validation_msg.set('Please fill in all required form fields!')
+                    return
+                else:
+                    data_validation_msg.set('')
+
+                # Data Validation Passed - Write database row
+
+                #print("Inside Submit")
+                composer_id = None if input.composer() == '' else input.composer()
+                style_id = None if input.style() == '' else input.style()
+                song_type = None if input.song_type() == '' else input.song_type()
+                # Create single row as dataframe
+                df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
+                                                   'title':[input.title()], # REQUIRED VALUE
+                                                   'style_id':[style_id],
+                                                   'composer_id':[composer_id],
+                                                   'song_type':[song_type]})
+                #print(df_row_to_database.to_string())
+                if self._df_selected_id:
+                    self._db_table_model.update(df_row_to_database)
+                else:
+                    self._db_table_model.insert(df_row_to_database)
+                
+                ui.modal_remove()
+                self.processData()
+                summary_df.set(self.df_summary)
+            
+            @reactive.effect
+            @reactive.event(input.btn_input_cancel)
+            def triggerInputCancel():
+                #print("Cancelled")
+                ui.modal_remove()
+
+            @render.text
+            def data_validation_text():
+                return data_validation_msg()
+            
+            return self.df_summary.copy
+
+        return input_form_func(self._namespace_id, summary_df)
+
+
+class ArrangementInputTableModel(ShinyInputTableModel):    
+
+    __db_artist_model=None
+    __artist_lookup=None
+    __difficulty_lookup=None
+    __song_lookup=None
+    __song_model=None
+    __arrangement_type_lookup={'Arrangement':'Arrangement','Exercise':'Exercise'} # Too lazy to make a lookup table for two values.  I'll do it is there's ever a third type
+
+    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel, db_style_model:database.DatabaseModel):
+        self._namespace_id=namespace_id
+        self._title=title
+        self._db_table_model=db_table_model
+        self.__db_artist_model = db_artist_model
+        self.__db_style_model = db_style_model
+        self.__db_song_model = db_song_model 
+
+    def processData(self):
+        # There is more complex logic required to process the Arrangement dataframe because it has the artist lookup field to worry about
+        df_raw_arrangement = self._db_table_model.df_raw
+        df_raw_artist = self.__db_artist_model.df_raw
+        df_raw_style = self.__db_style_model.df_raw
+        df_raw_song = self.__db_song_model.df_raw
+        df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id','name':'composer'},axis=1)
+        df_resolved_song = df_resolved_song.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+        #df_raw_arrangement['style_id'] = df_raw_arrangement['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        #df_raw_arrangement['composer'] = df_raw_arrangement['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
+        df_resolved_arrangement = df_resolved_arrangement.merge(df_resolved_song, how='left',left_on='song_id',right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+        #df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        #df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['style_id','id_y'], axis=1).rename({'id_x':'id', 'style':'Style'},axis=1)
+        df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
+        df_resolved_arrangement['At Tempo Date'] = pd.to_datetime(df_resolved_arrangement['at_tempo_date']).dt.strftime("%m/%d/%Y")
+        df_resolved_arrangement['Off Book Date'] = pd.to_datetime(df_resolved_arrangement['off_book_date']).dt.strftime("%m/%d/%Y")
+        df_resolved_arrangement['Play Ready Date'] = pd.to_datetime(df_resolved_arrangement['play_ready_date']).dt.strftime("%m/%d/%Y")
+        df_resolved_arrangement = df_resolved_arrangement.rename({'title':'Title', 'composer':'Composer','song_type':'Song Type','difficulty':'Difficulty','sheet_music_link':'Sheet Music Link','performance_link':'Performance Link','style':'Style'},axis=1).sort_values(['last_name','Title'])
+        self.df_summary = df_resolved_arrangement[['id','Title','Composer','Song Type','Style','Start Date','Off Book Date','At Tempo Date','Play Ready Date','Difficulty','Sheet Music Link','Performance Link']]
+
+
+        # Establish artist lookup
+        self.__artist_lookup = {'':''}
+        self.__artist_lookup.update({value:label for value,label in zip(df_raw_artist['id'],df_raw_artist['name'])})
+
+        # Establish song lookup
+        self.__song_lookup = {'':''}
+        self.__song_lookup.update({value:label for value,label in zip(df_raw_song['id'],df_raw_song['title'])})
+
+        
+        # Establish difficulty lookup
+        self.__difficulty_lookup = {'':''}
+        self.__difficulty_lookup.update({'Beginner':'Beginner','Intermediate':'Intermediate','Advanced':'Advanced'})
+
+
+
+    def __init_difficulty(self):
+        # provide initial value for the name field of the input form
+        if self._df_selected_id:
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['difficulty'].values[0])
+        else:
+            # User selected New
+            return None
+
+    def __init_sheet_music_link(self):
+        # provide initial value for the name field of the input form
+        if self._df_selected_id:
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['sheet_music_link'].values[0])
+        else:
+            # User selected New
+            return None
+
+    def __init_performance_link(self):
+        # provide initial value for the name field of the input form
+        if self._df_selected_id:
+            return str(self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['performance_link'].values[0])
+        else:
+            # User selected New
+            return None
 
     def __init_arranger(self):
         # provide initial value for the arranger lookup field of the input form
@@ -413,6 +573,22 @@ class ArrangementInputTableModel(ShinyInputTableModel):
             # User selected New
             return '' # New Record, there is no value    
 
+
+    def __init_song(self):
+        # provide initial value for the arranger lookup field of the input form
+        if self._df_selected_id: 
+            # User selected Update
+            song_id = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['song_id'].values[0]
+            if pd.isna(song_id):
+                return '' # Update a record with a null artist id
+
+            else:
+                if (not math.isnan(song_id)):
+                    return int(song_id) # Update a record with a non-null artist selection
+                '' # Update a record with a null artist id
+        else:
+            # User selected New
+            return '' # New Record, there is no value    
 
 
     def __init_style(self):
@@ -489,15 +665,15 @@ class ArrangementInputTableModel(ShinyInputTableModel):
         """
         return ui.row(
             ui.div(self._init_id_text()),
-            ui.input_text(id="title",label=f"{self._title} Title *", value=self.__init_title()).add_style('color:red;'), # REQUIRED VALUE
-            ui.input_select(id='arrangement_type', label="Arrangement Type", choices=self.__arrangement_type_lookup, selected=self.__init_arrangement_type()),
-            ui.input_select(id='style',label="Style", choices=self.__style_lookup, selected=self.__init_style()),
-            ui.input_select(id="composer",label="Composer",choices=self.__artist_lookup, selected=self.__init_composer()),
+            ui.input_select(id='song', label="Song", choices=self.__song_lookup, selected=self.__init_song()),
             ui.input_select(id="arranger",label="Arranger",choices=self.__artist_lookup, selected=self.__init_arranger()),
             ui.input_date(id="start_date", label="Start Date",value=self.__init_start_date()),
             ui.input_date(id="off_book_date", label="Off Book Date",value=self.__init_off_book_date()),
             ui.input_date(id="at_tempo_date", label="At Tempo Date",value=self.__init_at_tempo_date()),            
             ui.input_date(id="play_ready_date", label="Play Ready Date",value=self.__init_play_ready_date()),
+            ui.input_text(id='difficulty', label='Difficulty', value = self.__init_difficulty()),
+            ui.input_text(id='sheet_music_link', label='Sheet Music Link', value = self.__init_sheet_music_link()),
+            ui.input_text(id='performance_link', label='Performance Link', value = self.__init_performance_link()),
         ),
 
     def server_call(self, input, output, session, summary_df):
@@ -516,7 +692,7 @@ class ArrangementInputTableModel(ShinyInputTableModel):
             def triggerInputFormSubmit():
                 # Perform Data Validation and msg if issues
                 try:
-                    req(input.title())
+                    req(input.song())
                 except:
                     data_validation_msg.set('Please fill in all required form fields!')
                     return
@@ -526,21 +702,23 @@ class ArrangementInputTableModel(ShinyInputTableModel):
                 # Data Validation Passed - Write database row
 
                 #print("Inside Submit")
-                composer_id = None if input.composer() == '' else input.composer()
                 arranger_id = None if input.arranger() == '' else input.arranger()
                 style_id = None if input.style() == '' else input.style()
-                arrangement_type = None if input.arrangement_type() == '' else input.arrangement_type()
+                song_id = None if input.song()=='' else input.song()
                 # Create single row as dataframe
                 df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
-                                                   'title':[input.title()], # REQUIRED VALUE
+                                                   #'title':[input.title()], # REQUIRED VALUE
+                                                   'song_id':[song_id], #REQUIRED
                                                    'style_id':[style_id],
-                                                   'composer':[composer_id],
+                                                   'difficulty':[input.difficulty()],
+                                                   'sheet_music_link':[input.sheet_music_link()],
+                                                   'performance_link':[input.performance_link()],
+                                                   #'composer':[composer_id],
                                                    'arranger':[arranger_id],
                                                    'start_date':[input.start_date()],
                                                    'off_book_date':[input.off_book_date()],
                                                    'at_tempo_date':[input.at_tempo_date()],
-                                                   'play_ready_date':[input.play_ready_date()],
-                                                   'arrangement_type':[arrangement_type]})
+                                                   'play_ready_date':[input.play_ready_date()]})
                 #print(df_row_to_database.to_string())
                 if self._df_selected_id:
                     self._db_table_model.update(df_row_to_database)
@@ -570,36 +748,41 @@ class ArrangementGoalInputTableModel(ShinyInputTableModel):
 
     __db_arrangement_model=None
     __db_artist_model=None
+    __db_song_model=None
 
     # We want the lookup control for arrangements on the form to show all arrangements on the arrangements table that aren't already on the goal arrangements table.
     # However, when we update an existing goal arrangement record, we also want to add that arrangement id to the arrangement lookup table for that instance of the modal so that is isn't blank when we click Update on the record.
     __arrangement_lookup={}  # Gets populated during _ui_specific_code() so that it can have dynamic values for Update records
     __df_resolved_arrangement=pd.DataFrame() # used to add a selected id to the arrangement lookup table when a user clicks on update
 
-    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_arrangement_model:database.DatabaseModel, db_artist_model:database.DatabaseModel):
+    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_arrangement_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel):
         self._namespace_id=namespace_id
         self._title=title
         self._db_table_model=db_table_model
         self.__db_arrangement_model = db_arrangement_model
         self.__db_artist_model = db_artist_model
+        self.__db_song_model = db_song_model
 
     def processData(self):
         # There is more complex logic required to process the Arrangement dataframe because it has the artist lookup field to worry about
         df_raw_arrangement_goal = self._db_table_model.df_raw
         df_raw_artist = self.__db_artist_model.df_raw
         df_raw_arrangement = self.__db_arrangement_model.df_raw
-        
-        df_raw_arrangement['composer'] = df_raw_arrangement['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
-        df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
-        df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
-        df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        df_raw_song = self.__db_song_model.df_raw
+        df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        df_resolved_arrangement = df_raw_arrangement.merge(df_resolved_song,how='left',left_on='song_id',right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+        # Update this model to merge in song data
+        #df_raw_arrangement['composer'] = df_raw_arrangement['composer'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_resolved_arrangement['arranger'] = df_resolved_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger','last_name_x':'c_last_name','last_name_y':'a_last_name'},axis=1)
+        #df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
         self.__df_resolved_arrangement=df_resolved_arrangement.copy()
         df_resolved_arrangement_goal = df_raw_arrangement_goal.merge(df_resolved_arrangement, how='left', left_on='arrangement_id', right_on='id').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
         #df_resolved_arrangement_goal = df_resolved_arrangement.merge(df_raw_arrangement_goal, left_on='id', right_on='arrangement_id', how='right').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
         df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
 
         # Build rendered dataframe for the table navigator
-        df_summary = df_resolved_arrangement_goal.rename({'title':'Title', 'arrangement_type':'Arrangement Type','description':'Description','discovery_date':'Date Discovered'},axis=1).sort_values(['Date Discovered'], ascending=False)
+        df_summary = df_resolved_arrangement_goal.rename({'title':'Title', 'song_type':'Song Type','description':'Description','discovery_date':'Date Discovered'},axis=1).sort_values(['Date Discovered'], ascending=False)
         df_summary['Date Discovered'] = pd.to_datetime(df_summary['Date Discovered']).dt.strftime("%m/%d/%Y")
         self.df_summary = df_summary[['id','Title','Composer','Arranger','Date Discovered','Description']]
 
@@ -959,17 +1142,19 @@ class SessionInputTableModel(ShinyInputTableModel):
 
     __db_artist_model=None
     __db_arrangement_model=None
+    __db_song_model=None
     __arrangement_lookup=None
     __guitar_lookup=None
     __default_guitar_id=None # This is the default guitar_id used when creating new records
 
-    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_arrangement_model:database.DatabaseModel, db_artist_model:database.DatabaseModel, db_guitar_model:database.DatabaseModel):
+    def __init__(self, namespace_id:str, title:str, db_table_model:database.DatabaseModel, db_arrangement_model:database.DatabaseModel, db_song_model:database.DatabaseModel, db_artist_model:database.DatabaseModel, db_guitar_model:database.DatabaseModel):
         self._namespace_id=namespace_id
         self._title=title
         self._db_table_model=db_table_model
         self.__db_artist_model = db_artist_model
         self.__db_arrangement_model = db_arrangement_model
         self.__db_guitar_model = db_guitar_model
+        self.__db_song_model = db_song_model
         
         
     def processData(self):
@@ -979,7 +1164,13 @@ class SessionInputTableModel(ShinyInputTableModel):
         df_raw_arrangement = self.__db_arrangement_model.df_raw
         df_raw_artist = self.__db_artist_model.df_raw
         df_raw_guitar = self.__db_guitar_model.df_raw
-        df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        df_raw_song = self.__db_song_model.df_raw
+        df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
+        df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        
+        df_resolved_arrangement = df_raw_arrangement.merge(df_resolved_song, how='left', left_on='song_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+        
+        #df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='composer', right_on='id').drop(['composer','id_y'],axis=1).rename({'id_x':'id','name':'Composer'},axis=1)
         df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
         df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
         df_resolved_arrangement['Off Book Date'] = pd.to_datetime(df_resolved_arrangement['off_book_date']).dt.strftime("%m/%d/%Y")
@@ -988,16 +1179,17 @@ class SessionInputTableModel(ShinyInputTableModel):
         df_resolved_sessions = df_raw_session.merge(df_resolved_arrangement,how='left', left_on='l_arrangement_id', right_on='id').drop(['l_arrangement_id','id_y'],axis=1).rename({'id_x':'id'},axis=1)
         df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
         df_resolved_sessions = df_resolved_sessions.merge(df_raw_guitar,how='left', left_on='guitar_id',right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'}, axis=1)
-        df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Arrangement','video_url':'Video URL','make':'Guitar Make','model':'Guitar Model'},axis=1)
-        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Arrangement','Composer','Notes', 'Video URL', 'Guitar Make', 'Guitar Model']].sort_values('Session Date', ascending=False)
+        df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','video_url':'Video URL','make':'Guitar Make','model':'Guitar Model'},axis=1)
+        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Arranger','Notes', 'Video URL', 'Guitar Make', 'Guitar Model']].sort_values('Session Date', ascending=False)
         
         # Establish arrangement lookup
-        df_arrangement_lookup = df_raw_arrangement.merge(df_raw_artist,how='left',left_on='composer',right_on='id')
-        df_arrangement_lookup = df_arrangement_lookup.rename({'id_x':'id'},axis=1).drop('id_y',axis=1)
-        df_arrangement_lookup['last_name']=df_arrangement_lookup['name'].str.split(' ').str[-1].fillna('Unknown')
-        df_arrangement_lookup = df_arrangement_lookup.sort_values(['last_name','title'])
+        #df_arrangement_lookup = df_raw_arrangement.merge(df_raw_artist,how='left',left_on='composer',right_on='id')
+        df_arrangement_lookup = df_resolved_arrangement.rename({'last_name_x':'c_lastname', 'last_name_y':'a_lastname'}, axis=1)
+        #df_arrangement_lookup = df_arrangement_lookup.rename({'id_x':'id'},axis=1).drop('id_y',axis=1)
+        #df_arrangement_lookup['last_name']=df_arrangement_lookup['name'].str.split(' ').str[-1].fillna('Unknown')
+        df_arrangement_lookup = df_arrangement_lookup.sort_values(['c_lastname','Title'])
         self.__arrangement_lookup = {'':''}
-        self.__arrangement_lookup.update({value:f"{artist} - {label}" for value,label,artist in zip(df_arrangement_lookup['id'],df_arrangement_lookup['title'],df_arrangement_lookup['last_name'])})
+        self.__arrangement_lookup.update({value:f"{composer}/{arranger} - {label}" for value,label,composer,arranger in zip(df_arrangement_lookup['id'],df_arrangement_lookup['Title'],df_arrangement_lookup['c_lastname'],df_arrangement_lookup['a_lastname'])})
 
         df_temp_raw_guitar = df_raw_guitar.copy()
         df_temp_raw_guitar['default_msg'] = np.where(df_raw_guitar['default_guitar']," (Default)","")
