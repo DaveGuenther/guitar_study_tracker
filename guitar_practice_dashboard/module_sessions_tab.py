@@ -40,12 +40,12 @@ def table_calc_has_url(df_in):
 def sessions_ui():
 
     def sessions_filter_shelf(df_365):
-        arrangements = df_365[df_365['Arrangement'].notna()]['Arrangement'].unique()
+        arrangements = df_365[df_365['Song'].notna()]['Song'].unique()
         ret_val = ui.div(
             ui.h3("Filters:"),
             ui.input_checkbox_group(
                 "arrangement_title",
-                "Arrangement Title",
+                "Song Title",
                 choices={key:value for key,value in zip(arrangements, arrangements)},
                 selected=[key for key in arrangements],
             ),
@@ -86,7 +86,7 @@ def sessions_ui():
                     
                     ui.card(
                         ui.div(
-                            ui.h3("Time Spent Practicing Arrangements (Past Year)"),
+                            ui.h3("Time Spent Practicing Songs (Past Year)"),
                             output_widget(id='last_year_bar_chart'),
                             ui.div(class_='flex-blank'),
                         ).add_class("flex-vertical",)
@@ -129,7 +129,7 @@ def sessions_server(input, output, session):
         '''
         Logger(session.ns)
         df_filtered = df_365
-        df_filtered = df_365[(df_365['Arrangement'].isin(input.arrangement_title()))|(df_365['Arrangement'].isna())]
+        df_filtered = df_365[(df_365['Song'].isin(input.arrangement_title()))|(df_365['Song'].isna())]
         return df_filtered
 
     @module.ui
@@ -190,11 +190,11 @@ def sessions_server(input, output, session):
         Logger(session.ns)
         df_session_notes = df_sessions[(df_sessions['session_date']>=from_date-pd.DateOffset(days=num_days))&(df_sessions['session_date']<=pd.Timestamp(from_date))]
         df_session_notes = df_session_notes.sort_values('session_date')
-        df_arrangement_sort_lookup = df_session_notes.groupby(['Arrangement'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Arrangement','index']]
-        df_session_notes = pd.merge(df_session_notes, df_arrangement_sort_lookup, how='left', on="Arrangement")
+        df_arrangement_sort_lookup = df_session_notes.groupby(['Song'], as_index=False)[['Duration']].sum().sort_values('Duration', ascending=False).reset_index(drop=True).reset_index()[['Song','index']]
+        df_session_notes = pd.merge(df_session_notes, df_arrangement_sort_lookup, how='left', on="Song")
         df_session_notes = df_session_notes.sort_values(['index','session_date'])
         
-        df_out = df_session_notes[['id','Arrangement','Session Date','Notes','Duration', 'Video URL']].reset_index()
+        df_out = df_session_notes[['id','Song','Session Date','Notes','Duration', 'Video URL']].reset_index()
         return df_out.copy()
 
     def add_URL_icon_to_session_table(df_in, namespace_slug=''):
@@ -212,7 +212,7 @@ def sessions_server(input, output, session):
             if row['Video URL']:
                 print('Creating module with slug', str(int(row['id'])))
                 ret_html = create_video_button(namespace_id)
-                video_title=str(row['Session Date']+" - "+row['Arrangement'])
+                video_title=str(row['Session Date']+" - "+row['Song'])
                 video_icon_server(namespace_id,row['Video URL'], video_title)
                 print('Created module with slug', namespace_id)
             else:
@@ -229,7 +229,7 @@ def sessions_server(input, output, session):
         Logger(session.ns)
         df_out = sessionNotesTransform(num_days=7)
         df_out = add_URL_icon_to_session_table(df_out,"sessionNotesTable")
-        df_out = df_out [['Arrangement','Session Date','Notes','Duration',"Video Link"]]
+        df_out = df_out [['Song','Session Date','Notes','Duration',"Video Link"]]
         return render.DataTable(df_out, width="100%", styles=[{'class':'dashboard-table'}])
 
 
@@ -298,8 +298,8 @@ def sessions_server(input, output, session):
     def lastYearArrangementTransform():
         Logger(session.ns)
         df_365 = df_365_stage_1()
-        df_365 = df_365[df_365['Arrangement'].notna()]
-        df_365 = df_365.groupby(['Arrangement Type','Arrangement','Composer','Arranger'], as_index=False)['Duration'].sum()
+        df_365 = df_365[df_365['Song'].notna()]
+        df_365 = df_365.groupby(['Song Type','Song','Composer','Arranger'], as_index=False)['Duration'].sum()
         df_365['Minutes'] = df_365['Duration']%60
         df_365['Hours'] = (df_365['Duration']/60).apply(math.floor)
         df_365['Duration']=df_365['Duration']/60
@@ -310,7 +310,7 @@ def sessions_server(input, output, session):
     def last_year_bar_chart():
         Logger(session.ns)
         df_365_arrangements = lastYearArrangementTransform()
-        num_bars = len(list(df_365_arrangements['Arrangement']))
+        num_bars = len(list(df_365_arrangements['Song']))
         custom_data = [
             [composer, arranger, hours, minutes] for composer, arranger, hours, minutes in zip(
                 list(df_365_arrangements['Composer']),
@@ -322,7 +322,7 @@ def sessions_server(input, output, session):
         
         fig = go.Figure(go.Bar(
             x=df_365_arrangements['Duration'], 
-            y=[df_365_arrangements['Arrangement Type'],df_365_arrangements['Arrangement']], 
+            y=[df_365_arrangements['Song Type'],df_365_arrangements['Song']], 
             orientation='h',
             marker=dict(cornerradius=30),         
             customdata=custom_data
@@ -331,7 +331,7 @@ def sessions_server(input, output, session):
             #width=.3,
             marker_color="#03A9F4",
             hovertemplate="""
-                <b>Arrangement:</b> %{y}<br>
+                <b>Song:</b> %{y}<br>
                 <b>Composer:</b> %{customdata[0]}<br>
                 <b>Arranger:</b> %{customdata[1]}<br>
                 <b>Total Practice Time:</b> %{customdata[2]} Hours, %{customdata[3]} Minutes
@@ -378,20 +378,20 @@ def sessions_server(input, output, session):
     def last_week_bar_chart():
         Logger(session.ns)
         df_last_week = sessionNotesTransform()
-        df_bar_summary = df_last_week.groupby('Arrangement',as_index=False)[['Duration']].sum()
-        num_bars = len(list(df_bar_summary['Arrangement']))
+        df_bar_summary = df_last_week.groupby('Song',as_index=False)[['Duration']].sum()
+        num_bars = len(list(df_bar_summary['Song']))
         df_bar_summary = df_bar_summary.sort_values("Duration", ascending=True)
 
         fig = go.Figure(go.Bar(
             x=df_bar_summary['Duration'], 
-            y=df_bar_summary['Arrangement'], 
+            y=df_bar_summary['Song'], 
             orientation='h',
             marker=dict(cornerradius=30),         
             
             ))
         fig.update_traces(
             marker_color="#03A9F4",
-            hovertemplate='Arrangement: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
+            hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
         )
         fig.update_layout(
             margin=dict(t=0, b=0, l=0, r=0),
@@ -537,7 +537,7 @@ def sessions_server(input, output, session):
             Logger(session.ns)
             df_out = df_day()
             df_out = df_out.drop(['index','Session Date'],axis=1,errors='ignore')
-            df_out = df_out[['Arrangement','Notes','Duration']]
+            df_out = df_out[['Song','Notes','Duration']]
             return render.DataTable(df_out, width="100%", height="250px", styles=[{'class':'dashboard-table'}])
 
 
@@ -558,7 +558,7 @@ def sessions_server(input, output, session):
 
                 df_day_session = sessionNotesTransform(from_date=query_date, num_days=0)
                 #df_day_session = add_URL_icon_to_session_table(df_day_session,"heatmap_on_click")
-                df_day_session = df_day_session[['Arrangement','Session Date','Notes','Duration','Video URL']]
+                df_day_session = df_day_session[['Song','Session Date','Notes','Duration','Video URL']]
                 df_day.set(df_day_session.copy())
                 video_urls = df_day_session['Video URL'].replace('',None).copy()
                 video_urls = video_urls[video_urls.notna()]
