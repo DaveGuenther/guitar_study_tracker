@@ -21,6 +21,7 @@ import module_sessions_tab
 import module_career_tab
 import module_arsenal_tab
 import module_about_tab
+import module_goals_tab
 import logger
 
 Logger = logger.FunctionLogger
@@ -39,6 +40,7 @@ app_ui = ui.page_fluid(
                 module_sessions_tab.sessions_ui("sessions_tab"),
                 # Execute ui code for shiny modules
                 module_career_tab.career_ui("career_tab"),
+                module_goals_tab.goals_ui('goals_tab'),
                 module_arsenal_tab.arsenal_ui("arsenal_tab"),
                 module_about_tab.about_ui("about_tab"),
               
@@ -54,6 +56,7 @@ app_ui = ui.page_fluid(
 def server(input, output, session):
     module_sessions_tab.sessions_server("sessions_tab")
     module_career_tab.career_server("career_tab")
+    module_goals_tab.goals_server("goals_tab")
     module_arsenal_tab.arsenal_server("arsenal_tab")
     module_about_tab.about_server("about_tab")
 

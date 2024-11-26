@@ -39,7 +39,8 @@ def processArsenalData(session_model, guitar_model, string_set_model):
                               (df_session_raw['guitar_id']==row['id'])], row['strings_install_date']),axis=1)
 
     df_guitar_string_raw['hours_on_guitar'] = df_guitar_string_raw.apply(lambda row: df_session_raw[df_session_raw['guitar_id']==row['id']]['duration'].sum()/60, axis=1)
-
+    df_guitar_string_raw = df_guitar_string_raw.sort_values('hours_on_guitar', ascending=False)
+    
     return df_guitar_string_raw
 
 def processData(session_data, arrangement_data, song_data, artist_data, style_data):

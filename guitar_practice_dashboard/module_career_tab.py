@@ -41,7 +41,7 @@ def career_ui():
             ),
         )
     
-    ret_val = ui.nav_panel("Career",        
+    ret_val = ui.nav_panel("Career Progress",        
         ui.row(
             ui.card(
                 ui.output_text(id="avg_practice_time").add_class('ban-text'),
