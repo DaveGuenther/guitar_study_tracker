@@ -85,3 +85,4 @@ class GlobalData:
 
     def get_legend_id(self):
         return self._legend_id    
+

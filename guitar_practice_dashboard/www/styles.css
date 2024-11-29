@@ -304,3 +304,27 @@ iframe {
     white-space: nowrap;
     
 }
+
+.one{
+    background-color: lightgreen;
+    color:black;
+    font-weight: bold;
+}
+
+.two{
+    background-color: blue;
+    color:white;
+    font-weight: bold;
+}
+
+.three{
+    background-color: salmon;
+    color: black;
+    font-weight: bold;
+}
+
+.four{
+    background-color: grey;
+    color: black;
+    font-weight: bold;
+}
