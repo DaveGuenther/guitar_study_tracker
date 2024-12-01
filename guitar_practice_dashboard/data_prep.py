@@ -191,8 +191,9 @@ def processSongGoalsData(arrangement_model, arrangement_goal_model, song_model, 
     df_resolved_arrangement_goals = df_raw_arrangement_goals.merge(df_resolved_arrangement, how='inner', left_on='arrangement_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)    
     df_resolved_arrangement_goals = df_resolved_arrangement_goals[df_resolved_arrangement_goals['song_type']=='Song'].copy()
     df_resolved_arrangement_goals = df_resolved_arrangement_goals.rename({'discovery_date':'Discovery Date','description':'Description','difficulty':'Difficulty','sheet_music_link':'Sheet Music Link', 'performance_link':'Performance Link','title':'Title','song_type':'Song Type','composer':'Composer','style':'Style'},axis=1)
-    df_resolved_arrangement_goals = df_resolved_arrangement_goals[['id','Discovery Date','Description','Difficulty','Sheet Music Link','Performance Link','Arranger','Title','Song Type','Composer','Style']]
+    df_resolved_arrangement_goals = df_resolved_arrangement_goals[['id','song_id','Discovery Date','Description','Difficulty','Sheet Music Link','Performance Link','Arranger','Title','Song Type','Composer','Style']]
     df_resolved_arrangement_goals['id'] = df_resolved_arrangement_goals['id'].astype(str)
+    df_resolved_arrangement_goals['song_id'] = df_resolved_arrangement_goals['song_id'].astype(str)
     return df_resolved_arrangement_goals.copy()
 
 
