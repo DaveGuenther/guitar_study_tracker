@@ -58,7 +58,8 @@ class GlobalData:
 
             cls._df_arsenal = data_prep.processArsenalData(session_model, guitar_model, string_set_model)
             cls._df_sessions, cls._df_365 = data_prep.processData(session_model, arrangement_model, song_model, artist_model, style_model)
-            cls._df_arrangement_grindage = data_prep.processArrangementGrindageData(cls._df_sessions, session_model, arrangement_model, song_model, artist_model,style_model)
+            cls._df_arrangement_grindage = data_prep.processArrangementGrindageData(session_model, arrangement_model, song_model, artist_model,style_model)
+            cls._df_song_goals = data_prep.processSongGoalsData(arrangement_model, arrangement_goal_model, song_model, artist_model, style_model)
 
         return cls._instance
 
@@ -78,6 +79,9 @@ class GlobalData:
     
     def get_df_arsenal(self):
         return self._df_arsenal
+    
+    def get_df_song_goals(self):
+        return self._df_song_goals
 
     def increment_legend_id(self):
         """Call this before adding a new legend object"""

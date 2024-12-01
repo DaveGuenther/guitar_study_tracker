@@ -328,3 +328,30 @@ iframe {
     color: black;
     font-weight: bold;
 }
+
+#goals_tab-dynamic-ui-placeholder {
+    max-width:1200px;
+}
+
+.goal-main-content-title {
+    font-weight:bold;
+    
+}
+
+.goal-main-content-body {
+    font-size:smaller;
+    font-weight: normal;
+}
+
+/* Accordion Styling */
+.accordion-button {
+    background-color:green;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color:green;
+}
+
+.accordion-item {
+    background-color:red;
+}

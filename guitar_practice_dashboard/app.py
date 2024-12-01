@@ -26,7 +26,7 @@ import browser_tools # used for determining the resolution as input.dimension()
 import logger
 
 Logger = logger.FunctionLogger
-Logger.setLogger(True) # turn off the shinylogger
+Logger.setLogger(False) # turn off the shinylogger
 
 
 

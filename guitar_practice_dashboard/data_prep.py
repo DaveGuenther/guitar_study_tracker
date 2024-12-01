@@ -123,7 +123,7 @@ def processData(session_data, arrangement_data, song_data, artist_data, style_da
     df_summary=df_summary[df_summary['id'].notna()] #for the cumulative data since inception
     return df_summary, df_365
 
-def processArrangementGrindageData(df_sessions, session_model, arrangement_model, song_model, artist_model, style_model):
+def processArrangementGrindageData(session_model, arrangement_model, song_model, artist_model, style_model):
     #df_arrangements = arrangement_model.df_raw
     #df_sessions = df_sessions[df_sessions['Song Type']=='Song']
 
@@ -171,4 +171,28 @@ def processArrangementGrindageData(df_sessions, session_model, arrangement_model
     df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Song Type','Start Date','End Date']]
     return df_grindage
 
+def processSongGoalsData(arrangement_model, arrangement_goal_model, song_model, artist_model, style_model):
+    df_raw_arrangement_goals = arrangement_goal_model.df_raw
+    df_raw_arrangement = arrangement_model.df_raw    
+    df_raw_song = song_model.df_raw
+    df_raw_artist = artist_model.df_raw
+    df_raw_style = style_model.df_raw
     
+    df_raw_song['style_id'] = df_raw_song['style_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+    df_raw_song['composer_id'] = df_raw_song['composer_id'].astype("Int64") # Allows us to join on null ints since this column is nullable
+    df_raw_arrangement['arranger'] = df_raw_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
+        
+    df_resolved_song = df_raw_song.merge(df_raw_artist, how='left', left_on='composer_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id','name':'composer'},axis=1)
+    df_resolved_song = df_resolved_song.merge(df_raw_style, how='left', left_on='style_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+    
+    df_resolved_arrangement = df_raw_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y','last_name'],axis=1).rename({'id_x':'id','name':'Arranger'},axis=1)
+    df_resolved_arrangement = df_resolved_arrangement.merge(df_resolved_song, how='left', left_on='song_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)
+    
+    df_resolved_arrangement_goals = df_raw_arrangement_goals.merge(df_resolved_arrangement, how='inner', left_on='arrangement_id', right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'},axis=1)    
+    df_resolved_arrangement_goals = df_resolved_arrangement_goals[df_resolved_arrangement_goals['song_type']=='Song'].copy()
+    df_resolved_arrangement_goals = df_resolved_arrangement_goals.rename({'discovery_date':'Discovery Date','description':'Description','difficulty':'Difficulty','sheet_music_link':'Sheet Music Link', 'performance_link':'Performance Link','title':'Title','song_type':'Song Type','composer':'Composer','style':'Style'},axis=1)
+    df_resolved_arrangement_goals = df_resolved_arrangement_goals[['id','Discovery Date','Description','Difficulty','Sheet Music Link','Performance Link','Arranger','Title','Song Type','Composer','Style']]
+    df_resolved_arrangement_goals['id'] = df_resolved_arrangement_goals['id'].astype(str)
+    return df_resolved_arrangement_goals.copy()
+
+
