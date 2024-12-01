@@ -344,14 +344,19 @@ iframe {
 }
 
 /* Accordion Styling */
+.accordion-title {
+    font-weight:900;
+    color: #FFF8DC;
+}
+
 .accordion-button {
-    background-color:green;
+    background-color:black;
 }
 
 .accordion-button:not(.collapsed) {
-    background-color:green;
+    background-color:black;
 }
 
 .accordion-item {
-    background-color:red;
+    background-color:black;
 }

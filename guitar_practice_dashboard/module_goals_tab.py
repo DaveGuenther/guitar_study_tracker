@@ -77,7 +77,7 @@ def arrangement_details_card_server(input, output, session, arr_id):
         return ret_val
 
 @module.ui
-def goal_song_card_ui(song_name, composer):
+def goal_song_summary_card_ui(song_name, composer):
     return ui.input_action_button(
         id='btn_song', 
         label=ui.div(
@@ -85,42 +85,58 @@ def goal_song_card_ui(song_name, composer):
             ui.br(),
             f"{composer}",
         )
-    ).add_class('green').add_style('width:100%;'),
+    ).add_class('guitar-tooltip-title').add_style('width:100%;'),
 
 @module.server
-def goal_song_card_server(input, output, session, song_id, selected_song_id):
+def goal_song_summary_card_server(input, output, session, song_id, selected_song_id):
 
     @reactive.effect
     @reactive.event(input.btn_song)
     def set_selected_song():
         selected_song_id.set(song_id)
 
-
-def make_accordion_panels():
-    ret_val = []
-    for title in df_goal_arrangements['song_id']:
-        row = df_goal_arrangements[df_goal_arrangements['id']==title].iloc[0]  ##  Needs lots of fixing
-        ret_val.append(
-            ui.accordion_panel(
-                ui.div(
-                    row['Title']
-                ).add_style('width:100%;'),
-                ui.div(
-                    ui.card(
-                        ui.div("Title:").add_class('main-content-title'),
-                        ui.div(row['Name']).add_class('main-content-body'),
-                        ui.div("Style:").add_class('main-content-title'),
-                        ui.div(row['Style']).add_class('main-content-body'),
-                        ui.div("Composer:").add_class('main-content-title'),
-                        ui.div(row['Composer']).add_class('main-content-body'),          
-                        ui.div("Arranger:").add_class('main-content-title'),
-                        ui.div(row['Arranger']).add_class('main-content-body'),    
-                    ).add_class('dashboard-card'),
-                ), 
-                value=row['Name'],
-            )
-        )
+@module.ui
+def goal_song_details_ui():
+    ret_val=None
+    ret_val =  ui.card(
+        ui.div("Name:").add_class('goal-main-content-title'),
+        ui.output_text(id='txtName').add_class('goal-main-content-body'),
+        ui.div("Style:").add_class('goal-main-content-title'),
+        ui.output_text(id='txtStyle').add_class('goal-main-content-body'),
+        ui.div("Composer:").add_class('goal-main-content-title'),
+        ui.output_text(id='txtComposer').add_class('goal-main-content-body'),
+    ).add_class('dashboard-card'),
     return ret_val
+
+@module.server
+def goal_song_details_server(input, output, session, song_id):
+    
+    @reactive.calc
+    def get_song_record_from_id():
+        return df_goal_songs[df_goal_songs['song_id']==song_id].iloc[0]
+
+    @render.text
+    def txtName():
+        ret_val = None
+        if song_id:
+            ret_val = get_song_record_from_id()['Title']
+        return ret_val
+
+    @render.text
+    def txtStyle():
+        ret_val = None
+        if song_id:
+            ret_val = get_song_record_from_id()['Style']
+        return ret_val        
+
+    @render.text
+    def txtComposer():
+        ret_val = None
+        if song_id:        
+            ret_val = get_song_record_from_id()['Composer']
+        return ret_val
+
+
 
 @module.ui
 def goals_ui():
@@ -143,30 +159,41 @@ def goals_server(input, output, session, browser_res):
     selected_song=reactive.value(None)
 
     #set up server modules for wide-view server cards
-    [goal_song_card_server(id='wide_'+str(song_id), song_id=str(song_id), selected_song_id=selected_song) for song_id in df_goal_arrangements['song_id'].unique()]
+    [goal_song_summary_card_server(id='wide_'+str(song_id), song_id=str(song_id), selected_song_id=selected_song) for song_id in df_goal_arrangements['song_id'].unique()]
+
+    #set up server modules for song detail cards
+    [goal_song_details_server(id=song_id, song_id=song_id) for song_id in df_goal_arrangements['song_id'].unique()]
 
     #set up server modules for arrangement cards for each song (some songs have multiple arrangements)
     [arrangement_details_card_server(f"song{song_id}_arr{arr_id}_", arr_id) for song_id, arr_id in zip(df_goal_arrangements['song_id'], df_goal_arrangements['id'])]
 
-    @reactive.calc
-    def main_text_side_panel():
+    
+    def main_text_side_panel(non_reactive_selected_song):
         ret_val = None
-        if selected_song():
+        if non_reactive_selected_song:
             ret_val = ui.div(
                 ui.h3("About This Song:"),
-                ui.card(
-                    
-                    ui.div("Name:").add_class('goal-main-content-title'),
-                    ui.output_text(id='txtName').add_class('goal-main-content-body'),
-                    ui.div("Style:").add_class('goal-main-content-title'),
-                    ui.output_text(id='txtStyle').add_class('goal-main-content-body'),
-                    ui.div("Composer:").add_class('goal-main-content-title'),
-                    ui.output_text(id='txtComposer').add_class('goal-main-content-body'),
-                ).add_class('dashboard-card'),
+                goal_song_details_ui(non_reactive_selected_song),
                 ui.h3("Arrangements:"),
-                [arrangement_details_card_ui(f"song{selected_song()}_arr{arr_id}_", arr_id) for arr_id in df_goal_arrangements[df_goal_arrangements['song_id']==selected_song()]['id']],
+                [arrangement_details_card_ui(f"song{non_reactive_selected_song}_arr{arr_id}_", arr_id) for arr_id in df_goal_arrangements[df_goal_arrangements['song_id']==non_reactive_selected_song]['id']],
             )
         return ret_val     
+
+    def make_accordion_panels():
+        ret_val = []
+        for song_id in df_goal_songs['song_id']:
+            row = df_goal_songs[df_goal_songs['song_id']==song_id].iloc[0]  ##  Needs lots of fixing
+            ret_val.append(
+                ui.accordion_panel(
+                    ui.div(
+                        row['Title'],
+                        row['Composer']
+                    ).add_style('width:100%;'),
+                    main_text_side_panel(song_id),
+                    value=row['song_id'],
+                )
+            )
+        return ret_val
 
     @reactive.effect
     @reactive.event(browser_res, selected_song)
@@ -181,10 +208,10 @@ def goals_server(input, output, session, browser_res):
                 ui= ui.div(
                     ui.row(
                         ui.column(5,
-                            [goal_song_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
+                            [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
                         ),
                         ui.column(7,
-                            main_text_side_panel(),
+                            main_text_side_panel(selected_song()),
                         ),
                     ),
                     id='goals_tab-wide-ui-placeholder'
@@ -197,38 +224,7 @@ def goals_server(input, output, session, browser_res):
                 selector=f"#goals_tab-dynamic-ui-placeholder", 
                 where="afterBegin", # nest inside 'dynamic-ui-placeholder' element
                 ui= ui.div(
-                    #ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False).add_class('green'),
+                    ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
                     id='goals_tab-narrow-ui-placeholder'
                 )
             )
-
-    @reactive.calc
-    def get_song_record_from_id():
-        return df_goal_songs[df_goal_songs['song_id']==selected_song()].iloc[0]
-
-
-    @reactive.calc
-    def get_arrangements_for_song():
-        return df_goal_arrangements[df_goal_arrangements['song_id']==selected_song()]
-
-    @render.text
-    def txtName():
-        ret_val = None
-        if selected_song():
-            ret_val = get_song_record_from_id()['Title']
-        return ret_val
-
-    @render.text
-    def txtStyle():
-        ret_val = None
-        if selected_song():
-            ret_val = get_song_record_from_id()['Style']
-        return ret_val        
-
-    @render.text
-    def txtComposer():
-        ret_val = None
-        if selected_song():        
-            ret_val = get_song_record_from_id()['Composer']
-        return ret_val
-
