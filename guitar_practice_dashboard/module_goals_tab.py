@@ -265,6 +265,7 @@ def goals_server(input, output, session, browser_res):
         for song_id in df_goal_songs['song_id']:
             row = df_goal_songs[df_goal_songs['song_id']==song_id].iloc[0]  ##  Needs lots of fixing
             ret_val.append(
+                
                 ui.accordion_panel(
                         ui.div(
                             ui.div(              
@@ -296,16 +297,20 @@ def goals_server(input, output, session, browser_res):
                 ui= ui.div(
                     ui.row(
                         ui.column(5,
-                            ui.output_ui(id='style_legend').add_class('legend-font').add_style('display:inline;'),
+                            ui.div(
+                                ui.div().add_class('flex-blank'),
+                                ui.output_ui(id='style_legend').add_class('legend-font').add_style('display:inline;'),
+                                ui.div().add_class('flex-blank'),
+                        ).add_class('flex-horizontal'),
                             [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
                         ).add_class("wood-column"),
                         ui.column(7,
                             main_text_side_panel(selected_song()),
                         ),
                     ).add_style('height:100vh;'),
-                    ui.div(class_='flex-blank'),
+                    #ui.div(class_='flex-blank'),
                     ui.h6(
-                        ui.span("").add_class('flex-blank'),
+                        ui.span("").add_class('flex-blank'),                        
                         #ui.div(ui.HTML(video_link)),
                         ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
                         ", 2024",
@@ -319,6 +324,7 @@ def goals_server(input, output, session, browser_res):
                         ui.span("").add_style("width:5px; display:inline;"),  
                         "Data Source:",
                         ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+
                     ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'), 
                     id='goals_tab-wide-ui-placeholder'
                 ).add_class('stretch-vertical-height'),
@@ -331,8 +337,13 @@ def goals_server(input, output, session, browser_res):
                 where="afterBegin", # nest inside 'dynamic-ui-placeholder' element
                 ui= ui.div(
                     ui.div(
+                        ui.div(
+                            ui.div().add_class('flex-blank'),
+                            ui.output_ui(id='style_legend').add_class('legend-font').add_style('display:inline;'),
+                            ui.div().add_class('flex-blank'),
+                        ).add_class('flex-horizontal'),
                         ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
-                        id='goals_tab-narrow-ui-placeholder'
+                        
                     ).add_class('wood-column'),
                     #ui.div(class_='flex-blank'),
                     ui.h6(
@@ -349,6 +360,7 @@ def goals_server(input, output, session, browser_res):
                         ui.span("").add_style("width:5px; display:inline;"),  
                         "Data Source:",
                         ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
-                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),                     
+                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),      
+                    id='goals_tab-narrow-ui-placeholder'               
                 ).add_class('stretch-vertical-height').add_style('height: 100vh;'),
             )

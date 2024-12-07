@@ -454,6 +454,11 @@ iframe {
     background-color: rgb(0, 0, 0, 0);
 }
 
+/* Remove the little Chevron to the right of the accordian button that points up or down */
+.accordion-button::after {
+    width: 0px;
+}
+
 .accordion-item {
     background-color: rgb(0, 0, 0, 0);
 }
