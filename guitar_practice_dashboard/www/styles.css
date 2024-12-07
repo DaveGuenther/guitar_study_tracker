@@ -329,8 +329,15 @@ iframe {
     font-weight: bold;
 }
 
+.goal-flex-container {
+    display:flex;
+    justify-content: center;
+}
+
 #goals_tab-dynamic-ui-placeholder {
     max-width:1200px;
+    width:100%;
+    
 }
 
 .goal-main-content-title {
@@ -343,20 +350,105 @@ iframe {
     font-weight: normal;
 }
 
+.wood-column {
+    background-image: url("wood-bg.jpg");
+    background-repeat: repeat;
+    background-color: #D9B7A1 !important;   
+    /*height:100%; /* fill entire vertical height with texturemap */
+}
+
+.goal-plaque {
+    font-weight:900;
+    color: #333333;
+    aspect-ratio: 4;
+    width:auto;
+}
+
+.red-goal-plaque {
+    background-image: url("red-plate-500.png");
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;    
+}
+
+.blue-goal-plaque {
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+    background-image: url("green-plate-500.png");
+}
+
+.green-goal-plaque {
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+    background-image: url("blue-plate-500.png");
+}
+
+.yellow-goal-plaque {
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+    background-image: url("yellow-plate-500.png");
+}
+
+.purple-goal-plaque {
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+    background-image: url("purple-plate-500.png");
+}
+
+.orange-goal-plaque {
+    background-size: 100% auto;
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+    background-image: url("orange-plate-500.png");
+}
+
 /* Accordion Styling */
 .accordion-title {
     font-weight:900;
     color: #FFF8DC;
+    width: 100%;
 }
 
 .accordion-button {
-    background-color:black;
+    background-color: rgb(0, 0, 0, 0);
+}
+
+/* used to get rid of blue ghost border for open accordion button */
+.accordion .accordion-button:not(.collapsed):focus {
+    box-shadow: none; 
+}
+
+/* used to get rid of blue ghost border for closed accordion button */
+.accordion-button:focus {
+    box-shadow: none;
 }
 
 .accordion-button:not(.collapsed) {
-    background-color:black;
+    background-color: rgb(0, 0, 0, 0);
 }
 
 .accordion-item {
-    background-color:black;
+    background-color: rgb(0, 0, 0, 0);
 }

@@ -13,6 +13,15 @@ df_goal_arrangements = globals.get_df_song_goals()
 df_goal_songs = df_goal_arrangements.drop_duplicates('song_id', keep='first')[['song_id','Title','Composer','Style']]
 Logger = logger.FunctionLogger
 
+style_dict = {
+    'General':['red','#cf0c0c'],
+    'Baroque':['blue','#180ccf'],
+    'Romantic':['green','#16ba00'],
+    'Spanish':['purple','#9600f0'],
+    #'Style':['yellow','#ecff00'],
+    #'Style':['orange','#f78c00']
+    }
+
 @module.ui
 def arrangement_details_card_ui(arr_id):
     ret_val = ui.card(
@@ -80,12 +89,16 @@ def arrangement_details_card_server(input, output, session, arr_id):
 def goal_song_summary_card_ui(song_name, composer):
     return ui.input_action_button(
         id='btn_song', 
-        label=ui.div(
-            f"{song_name}",
-            ui.br(),
-            f"{composer}",
-        )
-    ).add_class('guitar-tooltip-title').add_style('width:100%;'),
+        label=ui.div(              
+            ui.div(
+                ui.div(
+                    f"{song_name}",
+                    ui.br(),
+                    f"{composer}",
+                ),
+            ).add_class("red-goal-plaque"),
+        ).add_class('goal-plaque'),
+    ).add_style('width:100%; border-style: none;'),
 
 @module.server
 def goal_song_summary_card_server(input, output, session, song_id, selected_song_id):
@@ -144,9 +157,10 @@ def goals_ui():
         "Goals",
         ui.div(
             ui.div(
-                id='goals_tab-dynamic-ui-placeholder'
-            ),
-        ).add_class('flex-horizontal'),
+                id='goals_tab-dynamic-ui-placeholder' # styling limits to 1200px wide
+            ).add_class('stretch-vertical-height'),
+        ).add_class('goal-flex-container'), # center content on screen
+        value='goal-main-tab-panel',
     )
     return ret_val
 
@@ -185,10 +199,22 @@ def goals_server(input, output, session, browser_res):
             row = df_goal_songs[df_goal_songs['song_id']==song_id].iloc[0]  ##  Needs lots of fixing
             ret_val.append(
                 ui.accordion_panel(
-                    ui.div(
-                        row['Title'],
-                        row['Composer']
-                    ).add_style('width:100%;'),
+                        ui.div(
+                            ui.div(              
+                                ui.div(
+                                    ui.div(
+                                        row['Title'],
+                                        ui.br(),
+                                        row['Composer'],
+                                    ),
+                                ).add_class("red-goal-plaque"),
+                            ).add_class('goal-plaque'),
+                        ).add_style('width:100%; border-style: none;'),
+
+#                    ui.div(
+#                        row['Title'],
+#                        row['Composer']
+#                    ).add_style('width:100%;'),
                     main_text_side_panel(song_id),
                     value=row['song_id'],
                 )
@@ -198,7 +224,7 @@ def goals_server(input, output, session, browser_res):
     @reactive.effect
     @reactive.event(browser_res, selected_song)
     def render_body():
-        print(browser_res())
+        #print(browser_res())
         if browser_res()[0]>=677:
             ui.remove_ui("#goals_tab-wide-ui-placeholder")
             ui.remove_ui("#goals_tab-narrow-ui-placeholder")
@@ -209,13 +235,13 @@ def goals_server(input, output, session, browser_res):
                     ui.row(
                         ui.column(5,
                             [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
-                        ),
+                        ).add_class("wood-column"),
                         ui.column(7,
                             main_text_side_panel(selected_song()),
                         ),
-                    ),
+                    ).add_style('height:100vh;'),
                     id='goals_tab-wide-ui-placeholder'
-                )
+                ).add_class('stretch-vertical-height'),
             )
         else:
             ui.remove_ui("#goals_tab-narrow-ui-placeholder")
@@ -226,5 +252,5 @@ def goals_server(input, output, session, browser_res):
                 ui= ui.div(
                     ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
                     id='goals_tab-narrow-ui-placeholder'
-                )
+                ).add_class('stretch-vertical-height wood-column').add_style('height: 100vh;'),
             )

@@ -33,7 +33,8 @@ Logger.setLogger(False) # turn off the shinylogger
 app_ui = ui.page_fluid(
     browser_tools.get_browser_res(),
     ui.head_content(
-        ui.tags.meta(property="og:image", content="https://i.imgur.com/Gep8lXT.png"),
+        ui.tags.meta(property="og:image", content="rosette-whole-small.png"),
+        #ui.tags.meta(property="og:image", content="https://i.imgur.com/Gep8lXT.png"),
     ),
     ui.tags.link(href='styles.css', rel="stylesheet"),
     ui.tags.link(href='flex.css', rel="stylesheet"),
