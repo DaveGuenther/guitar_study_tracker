@@ -435,9 +435,14 @@ iframe {
     background-color: rgb(0, 0, 0, 0);
 }
 
+.accordion {
+    --bs-accordion-border-color: rgb(0, 0, 0, 0);
+}
+
 /* used to get rid of blue ghost border for open accordion button */
 .accordion .accordion-button:not(.collapsed):focus {
     box-shadow: none; 
+    
 }
 
 /* used to get rid of blue ghost border for closed accordion button */

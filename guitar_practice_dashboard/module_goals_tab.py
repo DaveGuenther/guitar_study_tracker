@@ -22,6 +22,64 @@ style_dict = {
     #'Style':['orange','#f78c00']
     }
 
+def custom_categorical_legend(legend_id, categories={'One':'red','Two':'Green','Three':'blue'},size=20, border_radius=5, border='1px solid black', title=None, title_padding='10px'):
+    """
+    
+    """
+    legend_id = str(legend_id)
+    styles = """
+        <style>
+            .legend"""+legend_id+""" {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .legend-title"""+legend_id+""" {
+                margin-right: """+title_padding+"""
+                
+            }
+
+            .legend-item"""+legend_id+""" {
+                display: flex;
+                align-items: center;
+                margin-right: 10px;
+                
+            }
+
+            .legend-color"""+legend_id+""" {
+                width: """+str(size)+"""px;
+                height: """+str(size)+"""px;
+                border: """+border+""";
+                margin-right: 5px;
+                border-radius: """+str(border_radius)+"""px;
+            }
+        </style>
+        """
+    legend = """
+        <div class="legend"""+legend_id+"""">
+        """
+    if title:
+        legend = legend+ """
+            <div class="legend-title"""+legend_id+f"""">
+                <span>{title}</span>
+            </div>
+            """
+
+    for category, color in zip(categories.keys(), categories.values()):
+        legend_item="""
+            <div class="legend-item"""+legend_id+"""">
+                <div class="legend-color"""+legend_id+"""" style="background-color: """+color+""";"></div>
+                <span>"""+category+"""</span>
+            </div>
+            """
+        legend+=legend_item
+    legend+="""
+        </div>
+        """
+    return styles+legend
+
+
 @module.ui
 def arrangement_details_card_ui(arr_id):
     ret_val = ui.card(
@@ -155,6 +213,7 @@ def goal_song_details_server(input, output, session, song_id):
 def goals_ui():
     ret_val = ui.nav_panel(
         "Goals",
+        #ui.output_ui(id='style_legend').add_class('legend-font').add_class('goal-flex-container'),
         ui.div(
             ui.div(
                 id='goals_tab-dynamic-ui-placeholder' # styling limits to 1200px wide
@@ -181,6 +240,14 @@ def goals_server(input, output, session, browser_res):
     #set up server modules for arrangement cards for each song (some songs have multiple arrangements)
     [arrangement_details_card_server(f"song{song_id}_arr{arr_id}_", arr_id) for song_id, arr_id in zip(df_goal_arrangements['song_id'], df_goal_arrangements['id'])]
 
+
+    @render.text
+    def style_legend():
+        category_colors = {key:value[1] for key,value in zip(style_dict.keys(), style_dict.values())}
+        legend_id = str(globals.get_legend_id())
+        legend = custom_categorical_legend(legend_id, category_colors, title="Style: ")
+        ret_val = legend
+        return ret_val
     
     def main_text_side_panel(non_reactive_selected_song):
         ret_val = None
@@ -210,11 +277,6 @@ def goals_server(input, output, session, browser_res):
                                 ).add_class("red-goal-plaque"),
                             ).add_class('goal-plaque'),
                         ).add_style('width:100%; border-style: none;'),
-
-#                    ui.div(
-#                        row['Title'],
-#                        row['Composer']
-#                    ).add_style('width:100%;'),
                     main_text_side_panel(song_id),
                     value=row['song_id'],
                 )
@@ -234,12 +296,30 @@ def goals_server(input, output, session, browser_res):
                 ui= ui.div(
                     ui.row(
                         ui.column(5,
+                            ui.output_ui(id='style_legend').add_class('legend-font').add_style('display:inline;'),
                             [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
                         ).add_class("wood-column"),
                         ui.column(7,
                             main_text_side_panel(selected_song()),
                         ),
                     ).add_style('height:100vh;'),
+                    ui.div(class_='flex-blank'),
+                    ui.h6(
+                        ui.span("").add_class('flex-blank'),
+                        #ui.div(ui.HTML(video_link)),
+                        ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
+                        ", 2024",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "|",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "Source Code:",
+                        ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
+                        ui.span("").add_style("width:5px; display:inline;"),
+                        "|",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "Data Source:",
+                        ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'), 
                     id='goals_tab-wide-ui-placeholder'
                 ).add_class('stretch-vertical-height'),
             )
@@ -250,7 +330,25 @@ def goals_server(input, output, session, browser_res):
                 selector=f"#goals_tab-dynamic-ui-placeholder", 
                 where="afterBegin", # nest inside 'dynamic-ui-placeholder' element
                 ui= ui.div(
-                    ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
-                    id='goals_tab-narrow-ui-placeholder'
-                ).add_class('stretch-vertical-height wood-column').add_style('height: 100vh;'),
+                    ui.div(
+                        ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
+                        id='goals_tab-narrow-ui-placeholder'
+                    ).add_class('wood-column'),
+                    #ui.div(class_='flex-blank'),
+                    ui.h6(
+                        #ui.span("").add_class('flex-blank'),
+                        ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
+                        ", 2024",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "|",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "Source Code:",
+                        ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
+                        ui.span("").add_style("width:5px; display:inline;"),
+                        "|",
+                        ui.span("").add_style("width:5px; display:inline;"),  
+                        "Data Source:",
+                        ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),                     
+                ).add_class('stretch-vertical-height').add_style('height: 100vh;'),
             )
