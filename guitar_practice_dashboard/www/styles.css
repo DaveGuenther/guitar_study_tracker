@@ -270,7 +270,7 @@ iframe {
 .legend-font{
     font-family:garamond;
     color:#Ff9b15;
-    font-size:10pt;
+    font-size:12pt;
 }
 
 /*### Acoustic Arsenal ###*/
@@ -347,13 +347,21 @@ iframe {
     
 }
 
+.song-style-colored-bar {
+    width:90%;
+    height:10px;
+    flex:1 1 auto;
+    justify-content: center;
+    margin: 10px 10px;
+}
+
 .goal-main-content-title {
     font-weight:bold;
     
 }
 
 .goal-main-content-body {
-    font-size:smaller;
+    font-size:12pt;
     font-weight: normal;
 }
 
@@ -365,6 +373,7 @@ iframe {
 }
 
 .goal-plaque {
+    font-size:14pt;
     font-weight:900;
     color: #333333;
     aspect-ratio: 4;
@@ -389,7 +398,7 @@ iframe {
     display:flex;
     justify-content: center;
     align-items: center;  
-    background-image: url("green-plate-500.png");
+    background-image: url("blue-plate-500.png");
 }
 
 .green-goal-plaque {
@@ -399,7 +408,7 @@ iframe {
     display:flex;
     justify-content: center;
     align-items: center;  
-    background-image: url("blue-plate-500.png");
+    background-image: url("green-plate-500.png");
 }
 
 .yellow-goal-plaque {

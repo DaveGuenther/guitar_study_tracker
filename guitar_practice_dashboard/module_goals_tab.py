@@ -144,7 +144,8 @@ def arrangement_details_card_server(input, output, session, arr_id):
         return ret_val
 
 @module.ui
-def goal_song_summary_card_ui(song_name, composer):
+def goal_song_summary_card_ui(song_name, composer, style):
+    plaque_color = style_dict[style][0]
     return ui.input_action_button(
         id='btn_song', 
         label=ui.div(              
@@ -154,7 +155,7 @@ def goal_song_summary_card_ui(song_name, composer):
                     ui.br(),
                     f"{composer}",
                 ),
-            ).add_class("red-goal-plaque"),
+            ).add_class(f"{plaque_color}-goal-plaque"),
         ).add_class('goal-plaque'),
     ).add_style('width:100%; border-style: none;'),
 
@@ -251,11 +252,19 @@ def goals_server(input, output, session, browser_res):
     def main_text_side_panel(non_reactive_selected_song):
         ret_val = None
         if non_reactive_selected_song:
+            style=df_goal_arrangements[df_goal_arrangements['song_id']==non_reactive_selected_song].iloc[0]['Style']
+            plaque_color = style_dict[style][1]
             ret_val = ui.div(
+                ui.div(
+                    ui.div().add_class('song-style-colored-bar').add_style(f'background-color:{plaque_color};'),
+                ).add_class('flex-horizontal'),
                 ui.h3("About This Song:"),
                 goal_song_details_ui(non_reactive_selected_song),
                 ui.h3("Arrangements:"),
                 [arrangement_details_card_ui(f"song{non_reactive_selected_song}_arr{arr_id}_", arr_id) for arr_id in df_goal_arrangements[df_goal_arrangements['song_id']==non_reactive_selected_song]['id']],
+                ui.div(
+                    ui.div().add_class('song-style-colored-bar').add_style(f'background-color:{plaque_color};'),
+                ).add_class('flex-horizontal'),
             )
         return ret_val     
 
@@ -263,6 +272,7 @@ def goals_server(input, output, session, browser_res):
         ret_val = []
         for song_id in df_goal_songs['song_id']:
             row = df_goal_songs[df_goal_songs['song_id']==song_id].iloc[0]  ##  Needs lots of fixing
+            plaque_style =style_dict[row['Style']][0]
             ret_val.append(
                 
                 ui.accordion_panel(
@@ -274,7 +284,7 @@ def goals_server(input, output, session, browser_res):
                                         ui.br(),
                                         row['Composer'],
                                     ),
-                                ).add_class("red-goal-plaque"),
+                                ).add_class(f"{plaque_style}-goal-plaque"),
                             ).add_class('goal-plaque'),
                         ).add_style('width:100%; border-style: none;'),
                     main_text_side_panel(song_id),
@@ -301,7 +311,7 @@ def goals_server(input, output, session, browser_res):
                                 ui.output_ui(id='style_legend').add_class('legend-font').add_style('display:inline;'),
                                 ui.div().add_class('flex-blank'),
                         ).add_class('flex-horizontal'),
-                            [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer) for song_id, song_name, composer in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'])],                  
+                            [goal_song_summary_card_ui(id='wide_'+str(song_id), song_name=song_name, composer=composer, style=style) for song_id, song_name, composer, style in zip(df_goal_songs['song_id'],df_goal_songs['Title'],df_goal_songs['Composer'], df_goal_songs['Style'])],                  
                         ).add_class("wood-column"),
                         ui.column(7,
                             main_text_side_panel(selected_song()),

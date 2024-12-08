@@ -28,8 +28,6 @@ import logger
 Logger = logger.FunctionLogger
 Logger.setLogger(False) # turn off the shinylogger
 
-
-
 app_ui = ui.page_fluid(
     browser_tools.get_browser_res(),
     ui.head_content(
