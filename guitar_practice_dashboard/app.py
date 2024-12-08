@@ -39,18 +39,40 @@ app_ui = ui.page_fluid(
     ui.tags.link(href='styles.css', rel="stylesheet"),
     ui.tags.link(href='flex.css', rel="stylesheet"),
     ui.div(
-        ui.page_navbar(
-            module_sessions_tab.sessions_ui("sessions_tab"),
-            # Execute ui code for shiny modules
-            module_career_tab.career_ui("career_tab"),
-            module_goals_tab.goals_ui('goals_tab'),
-            module_arsenal_tab.arsenal_ui("arsenal_tab"),
-            module_about_tab.about_ui("about_tab"),
-            
-        id='main_nav_bar',     
-        title="Guitar Study Tracker",
-        ),
-    ),
+        ui.div(
+            ui.div(
+                ui.page_navbar(
+                    module_sessions_tab.sessions_ui("sessions_tab"),
+                    # Execute ui code for shiny modules
+                    module_career_tab.career_ui("career_tab"),
+                    module_goals_tab.goals_ui('goals_tab'),
+                    module_arsenal_tab.arsenal_ui("arsenal_tab"),
+                    module_about_tab.about_ui("about_tab"),
+                id='main_nav_bar',     
+                title="Guitar Study Tracker",
+                ).add_class("dave-nav"),
+            ).add_class('session-main-layout'),
+            ui.div(
+                ui.h6(
+                    ui.span("").add_class('flex-blank'),
+                    #ui.div(ui.HTML(video_link)),
+                    ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
+                    ", 2024",
+                    ui.span("").add_style("width:5px; display:inline;"),  
+                    "|",
+                    ui.span("").add_style("width:5px; display:inline;"),  
+                    "Source Code:",
+                    ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
+                    ui.span("").add_style("width:5px; display:inline;"),
+                    "|",
+                    ui.span("").add_style("width:5px; display:inline;"),  
+                    "Data Source:",
+                    ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
+                ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),
+            ).add_class('layout-main-footer'),
+        ).add_class('layout-main'),
+        
+    ).add_class('top-level-div'),
     title="Guitar Study Tracker"
 
 )

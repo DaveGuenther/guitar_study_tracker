@@ -96,25 +96,10 @@ def sessions_ui():
                 ).add_class("flex-vertical").add_style("padding-left:6px;"),
             ).add_style("margin-top: 10px;"),    
                 
-            ui.h6(
-                ui.span("").add_class('flex-blank'),
-                #ui.div(ui.HTML(video_link)),
-                ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
-                ", 2024",
-                ui.span("").add_style("width:5px; display:inline;"),  
-                "|",
-                ui.span("").add_style("width:5px; display:inline;"),  
-                "Source Code:",
-                ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
-                ui.span("").add_style("width:5px; display:inline;"),
-                "|",
-                ui.span("").add_style("width:5px; display:inline;"),  
-                "Data Source:",
-                ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
-            ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),            
-
+                        
         ),
     )
+
     return ret_val
 
 @module.server

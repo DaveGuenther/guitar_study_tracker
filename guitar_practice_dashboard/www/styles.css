@@ -79,7 +79,30 @@ Light green: #008000
 
 }
 
+/* container to cover vertical screen distance - place this before ANY ui */
+.top-level-div {
+    height:100vh;
+}
 
+/* defines the main app as a vertical column of content so we can place a main body and footer */
+.layout-main {
+    display:flex;
+    flex-direction:column;
+    height: 100%
+}
+
+/* sets the main window for the app leaving space for a footer at the bottom - place just inside top-level-div*/
+.layout-main-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+/* sets the main window for the app leaving space for a footer at the bottom - place just inside top-level-div*/
+.layout-main-footer {
+    flex: 0 0 auto;
+    height: 50px;
+    background-color: black;
+}
 
 .bslib-gap-spacing{
     gap:0px;
@@ -140,7 +163,7 @@ thead, th{
     background-repeat: no-repeat, repeat;
     background-color: #D9B7A1 !important;
     padding-left: 60px;
-    
+    flex: 0 0 auto;
 }
 
 body {
@@ -305,28 +328,12 @@ iframe {
     
 }
 
-.one{
-    background-color: lightgreen;
-    color:black;
-    font-weight: bold;
-}
 
-.two{
-    background-color: blue;
-    color:white;
-    font-weight: bold;
-}
 
-.three{
-    background-color: salmon;
-    color: black;
-    font-weight: bold;
-}
+/* ##### Goals Tab ##### */
 
-.four{
-    background-color: grey;
-    color: black;
-    font-weight: bold;
+.stretch-vertical-height {
+    height:calc(100% - 200px);
 }
 
 .goal-flex-container {
@@ -362,6 +369,7 @@ iframe {
     color: #333333;
     aspect-ratio: 4;
     width:auto;
+    text-align:center;
 }
 
 .red-goal-plaque {

@@ -213,7 +213,6 @@ def goal_song_details_server(input, output, session, song_id):
 def goals_ui():
     ret_val = ui.nav_panel(
         "Goals",
-        #ui.output_ui(id='style_legend').add_class('legend-font').add_class('goal-flex-container'),
         ui.div(
             ui.div(
                 id='goals_tab-dynamic-ui-placeholder' # styling limits to 1200px wide
@@ -307,27 +306,9 @@ def goals_server(input, output, session, browser_res):
                         ui.column(7,
                             main_text_side_panel(selected_song()),
                         ),
-                    ).add_style('height:100vh;'),
-                    #ui.div(class_='flex-blank'),
-                    ui.h6(
-                        ui.span("").add_class('flex-blank'),                        
-                        #ui.div(ui.HTML(video_link)),
-                        ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
-                        ", 2024",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "|",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "Source Code:",
-                        ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
-                        ui.span("").add_style("width:5px; display:inline;"),
-                        "|",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "Data Source:",
-                        ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
-
-                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'), 
+                    ),#.add_style('height:100vh;'),
                     id='goals_tab-wide-ui-placeholder'
-                ).add_class('stretch-vertical-height'),
+                ),#.add_class('stretch-vertical-height'),
             )
         else:
             ui.remove_ui("#goals_tab-narrow-ui-placeholder")
@@ -344,23 +325,7 @@ def goals_server(input, output, session, browser_res):
                         ).add_class('flex-horizontal'),
                         ui.accordion(*make_accordion_panels(), id="acc_single", multiple=False),
                         
-                    ).add_class('wood-column'),
-                    #ui.div(class_='flex-blank'),
-                    ui.h6(
-                        #ui.span("").add_class('flex-blank'),
-                        ui.tags.a("Dave Guenther",href="https://www.linkedin.com/in/dave-guenther-915a8425a",target='_blank'),
-                        ", 2024",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "|",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "Source Code:",
-                        ui.tags.a("GitHub",href="https://github.com/DaveGuenther/guitar_study_tracker",target='_blank'),
-                        ui.span("").add_style("width:5px; display:inline;"),
-                        "|",
-                        ui.span("").add_style("width:5px; display:inline;"),  
-                        "Data Source:",
-                        ui.tags.a("Supabase",href="https://supabase.com/",target='_blank'),
-                    ).add_class('flex-horizontal').add_style('flex-wrap:wrap;'),      
+                    ).add_class('wood-column'),  
                     id='goals_tab-narrow-ui-placeholder'               
-                ).add_class('stretch-vertical-height').add_style('height: 100vh;'),
+                ),#.add_style('height: 100vh;'),
             )
