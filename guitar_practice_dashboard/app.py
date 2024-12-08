@@ -31,12 +31,14 @@ Logger.setLogger(False) # turn off the shinylogger
 app_ui = ui.page_fluid(
     browser_tools.get_browser_res(),
     ui.head_content(
+        # Determine how Share Links look when app is shared on social media
         ui.tags.meta(property="og:title", content="Guitar Study Tracker"),
         ui.tags.meta(property="og:type", content="website"),
-        ui.tags.meta(property="og:image", content="rosette-whole-small.png"),
+        ui.tags.meta(property="og:image", content="https://i.imgur.com/Gep8lXT.png"),
         ui.tags.meta(property="og:url", content="https://dave-j-guenther.shinyapps.io/guitar_study_tracker/"),
         ui.tags.meta(property="og:description", content="A web app that visualizes progress of my guitar study journey.  This app uses the Shiny for Python web framework."),
         
+        # Use the Google Garamond font since Andriod phones don't have garamond by default
         ui.HTML(
             """
             <link rel="preconnect" href="https://fonts.googleapis.com">
