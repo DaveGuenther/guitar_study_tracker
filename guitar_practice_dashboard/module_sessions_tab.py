@@ -329,7 +329,7 @@ def sessions_server(input, output, session):
             modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
             
             # Main plot styling
-            font_family='garamond',
+            font_family='EB Garamond',
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
@@ -344,7 +344,7 @@ def sessions_server(input, output, session):
             hoverlabel=dict(
                 bgcolor="white",
                 font_size=14,
-                font_family="Garamond",
+                font_family="EB Garamond",
                 bordercolor="black",
                 align="left"
             ),
@@ -384,7 +384,7 @@ def sessions_server(input, output, session):
             modebar=dict(remove=['zoom2d','pad2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d']),
             
             # Main plot styling
-            font_family='garamond',
+            font_family='EB Garamond',
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
@@ -404,7 +404,7 @@ def sessions_server(input, output, session):
             hoverlabel=dict(
                 bgcolor="white",
                 font_size=14,
-                font_family="Garamond",
+                font_family="EB Garamond",
                 bordercolor="black",
                 align="left"
             ),
@@ -444,7 +444,7 @@ def sessions_server(input, output, session):
                 hoverlabel=dict(
                     bgcolor="white",
                     font_size=14,
-                    font_family="Garamond",
+                    font_family="EB Garamond",
                     bordercolor="black",
                     align="left"
                 ),
@@ -481,7 +481,7 @@ def sessions_server(input, output, session):
             xaxis_dtick=1, 
             
             # Main plot styling
-            font_family='garamond',            
+            font_family='EB Garamond',            
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             

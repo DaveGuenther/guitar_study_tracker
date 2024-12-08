@@ -31,8 +31,19 @@ Logger.setLogger(False) # turn off the shinylogger
 app_ui = ui.page_fluid(
     browser_tools.get_browser_res(),
     ui.head_content(
+        ui.tags.meta(property="og:title", content="Guitar Study Tracker"),
+        ui.tags.meta(property="og:type", content="website"),
         ui.tags.meta(property="og:image", content="rosette-whole-small.png"),
-        #ui.tags.meta(property="og:image", content="https://i.imgur.com/Gep8lXT.png"),
+        ui.tags.meta(property="og:url", content="https://dave-j-guenther.shinyapps.io/guitar_study_tracker/"),
+        ui.tags.meta(property="og:description", content="A web app that visualizes progress of my guitar study journey.  This app uses the Shiny for Python web framework."),
+        
+        ui.HTML(
+            """
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+            """
+        ),
     ),
     ui.tags.link(href='styles.css', rel="stylesheet"),
     ui.tags.link(href='flex.css', rel="stylesheet"),

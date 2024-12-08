@@ -167,7 +167,7 @@ thead, th{
 }
 
 body {
-    font-family: garamond;
+    font-family: "EB Garamond", serif;
     background-color: black;
     color: #FFF8DC;
 }
@@ -268,7 +268,7 @@ iframe {
   }
 
 .legend-font{
-    font-family:garamond;
+    font-family:"EB Garamond", serif;
     color:#Ff9b15;
     font-size:12pt;
 }
@@ -286,7 +286,7 @@ iframe {
 }
 
 .guitar-tooltip {
-    font-family:garamond;
+    font-family:"EB Garamond", serif;
     text-align:left;
     font-size:12pt;
     color: #beb8a4;
