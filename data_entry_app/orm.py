@@ -34,16 +34,13 @@ tbl_arrangement = Table(
     'arrangement',
     metadata,
     Column('id', Integer, nullable=False),
-    #Column('title', Text, nullable=False),
+
     Column('start_date', Date, nullable=True),
     Column('off_book_date', Date, nullable=True),
     Column('at_tempo_date', Date, nullable=True),
     Column('play_ready_date', Date, nullable=True),
-    #Column('style_id', Text, nullable=True), # foreign key to style.id
     Column('song_id', Integer, nullable=False), # foreign key to song.id
-    #Column('composer', Integer, nullable=True), # foreign key to artist.id
     Column('arranger', Integer, nullable=True), # foreign key to artist.id (writers and arrangers can be the same person)
-    #Column('arrangement_type', Text, nullable=True),
     Column('difficulty', Text, nullable=True),
     Column('sheet_music_link', Text, nullable=True), # Link to sheet music online or book where it's located
     Column('performance_link', Text, nullable=True), # This would be a particular performance that I heard of the arrangement that I really liked.  It will probably color my phrasing once I learn it..  :p
