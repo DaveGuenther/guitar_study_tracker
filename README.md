@@ -1,5 +1,5 @@
 # Guitar Study Tracker
-This is a public shiny hobby app for ([data entry](https://dave-j-guenther.shinyapps.io/guitar_tracker_data_entry/)) to a postgres database and ([visual dashboard](https://dave-j-guenther.shinyapps.io/guitar_study_tracker/)) hosted on shinyapps.io to track guitar study progress and communicate with my teacher.  Class diagrams in the docs/ folder are created with Dia Diagram Editor: http://dia-installer.de/.
+This is a shiny hobby app for ([data entry](https://dave-j-guenther.shinyapps.io/guitar_tracker_data_entry/)) to a postgres database and ([visual dashboard](https://dave-j-guenther.shinyapps.io/guitar_study_tracker/)) hosted on shinyapps.io to track guitar study progress and communicate with my teacher.  Class diagrams in the docs/ folder are created with Dia Diagram Editor: http://dia-installer.de/.
 
 ## Env Setup
 This virtual environment will be used when building the data entry form, which stores write credentials as environment variables for posting to a local Shiny server.
