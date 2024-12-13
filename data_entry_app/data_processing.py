@@ -752,7 +752,7 @@ class ArrangementGoalInputTableModel(ShinyInputTableModel):
         df_resolved_arrangement['arranger'] = df_resolved_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
         df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger','last_name_x':'c_last_name','last_name_y':'a_last_name'},axis=1)
         
-        self.__df_resolved_arrangement=df_resolved_arrangement.copy()
+        #self.__df_resolved_arrangement=df_resolved_arrangement.copy()
         df_resolved_arrangement_goal = df_raw_arrangement_goal.merge(df_resolved_arrangement, how='left', left_on='arrangement_id', right_on='id').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
         df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
 
@@ -1172,6 +1172,11 @@ class SessionInputTableModel(ShinyInputTableModel):
         df_arrangements_ordered_by_playtime = df_arrangements_ordered_by_playtime.merge(df_resolved_arrangement[['id','Lookup Name']], how='inner', on='Lookup Name').rename({'id':'l_arrangement_id'},axis=1)
 
         df_arrangement_lookup = pd.concat([df_arrangements_last_ten_days, df_arrangements_ordered_by_playtime]).reset_index(drop=True)
+        df_resolved_arrangement = df_resolved_arrangement.sort_values('last_name_x').rename({'id':'l_arrangement_id'},axis=1)[['l_arrangement_id','Lookup Name']]
+        
+        df_unplayed_arrangements = df_resolved_arrangement[~df_resolved_arrangement['Lookup Name'].isin(list(df_arrangement_lookup['Lookup Name']))]
+        df_arrangement_lookup = pd.concat([df_arrangement_lookup, df_unplayed_arrangements]).reset_index(drop=True)
+        
         self.__arrangement_lookup = {'':''}
         self.__arrangement_lookup.update({value:f"{lookup_name}" for value,lookup_name in zip(df_arrangement_lookup['l_arrangement_id'],df_arrangement_lookup['Lookup Name'])})
 

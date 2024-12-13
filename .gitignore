@@ -5,6 +5,7 @@
 **profile.json
 data_entry_app/variables.env
 data_entry_app/manifest.json
+database_backup/variables.env
 guitar_practive_dashboard/manifest.json
 guitar_practice_dashboard/data.csv
 guitar_practice_dashboard/variables.env

@@ -20,13 +20,17 @@ class DatabaseSession:
     __port=None
     __dbname=None
 
-    def __init__(self, host:str, port:str, dbname:str):
+    def __init__(self, host:str=None, port:str=None, dbname:str=None):
         self.__host = host
         self.__port = port
         self.__dbname = dbname
 
-    def connect(self, user:str, password:str):
-        connect_string = f'postgresql+psycopg2://{user}:{password}@{self.__host}:{self.__port}/{self.__dbname}'
+    def connect(self, user:str=None, password:str=None):
+        if self.__host:
+            connect_string = f'postgresql+psycopg2://{user}:{password}@{self.__host}:{self.__port}/{self.__dbname}'
+        else:
+            print("variables.env not detected...  Loading local sqllite datebase")
+            connect_string=f'sqlite:///local_guitar_data.db'
 
         # Connect to db and establish session
         engine = create_engine(connect_string)
@@ -83,7 +87,7 @@ class DatabaseModel:
 
 
     def update(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row_id = row['id']
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
@@ -91,14 +95,14 @@ class DatabaseModel:
         self.read()
 
     def insert(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row = row.drop('id',errors='ignore')
         row_data = {key:value for key, value in zip(row.keys(), row.values)}
         self.__session.insertRecord(self.__orm, row_data)
         self.read()
 
     def delete(self, df_row):
-        row = df_row.loc[0]
+        row = df_row.iloc[0]
         row_id=row['id']
         self.__session.deleteRecord(self.__orm, row_id)
 

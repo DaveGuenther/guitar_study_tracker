@@ -9,6 +9,8 @@ from sqlalchemy.orm import declarative_base
 
 load_dotenv("variables.env")
 schema=os.getenv("pg_schema")
+if not schema:
+    schema = 'main'
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -107,3 +109,4 @@ tbl_string_set = Table(
     Column('image_url', Text, nullable=True),
     schema=schema,
 )
+

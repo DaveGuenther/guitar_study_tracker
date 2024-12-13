@@ -133,10 +133,6 @@ def server(input, output, session):
                 pw = os.getenv('pg_pw')
                 read_only_acct=True
 
-            user_name='open_wr.rlkwpbwcrorduznnwxdq'
-            pw='A6^h70ZK_bQQ'
-            read_only_acct=False
-
         # connect to database
         string_set_model.connect(user_name, pw, read_only_acct)
         artist_model.connect(user_name, pw, read_only_acct)
