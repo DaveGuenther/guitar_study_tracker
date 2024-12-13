@@ -10,7 +10,7 @@ pip install --upgrade pip setuptools wheel
 sudo apt install libpq-dev   # for ubuntu systems  This is needed to pip install psycopg2
 pip install requirements.txt
 ```
-Once complete, create a file in the /data_entry_app, /guitar_practice_dashboard, and /database_backup directories called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
+Once complete, create a file in the <code>/data_entry_app</code>, <code>/guitar_practice_dashboard</code>, and <code>/database_backup</code> directories called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
 ``` text
 pg_user='*****' # Read only password
 pg_pw='*****' # Read only password
