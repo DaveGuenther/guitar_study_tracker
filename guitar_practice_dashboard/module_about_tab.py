@@ -112,7 +112,7 @@ def about_ui():
                             Putting it all together, I came up with the following database schema:
                             <br><figure><img src="about/data-engineering-1-min.png" width="60%" height="60%" style="display: block; margin: 0 auto"><figcaption><center><i>Database schema diagram</i></center></figcaption></figure>
                             I got this set up in Supabase and then set up a data entry app using python and sqlalchemy to read from and write to the tables.  I decided to set up two main accounts, one that is read only and one that is read/write.  The database hostname, port information, schema, and read-only credentials are stored in the variables.env file that is NOT tracked in my git repository but is copied directly to shinyapps.io when I use Posit’s rsconnect command line interface to publish.
-
+                            Here is a link to the [Data Entry App](https://dave-j-guenther.shinyapps.io/guitar_tracker_data_entry/)
                             """
                         ),
                     ),         

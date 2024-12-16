@@ -752,9 +752,11 @@ class ArrangementGoalInputTableModel(ShinyInputTableModel):
         df_resolved_arrangement['arranger'] = df_resolved_arrangement['arranger'].astype("Int64") # Allows us to join on null ints since this column is nullable
         df_resolved_arrangement = df_resolved_arrangement.merge(df_raw_artist, how='left', left_on='arranger', right_on='id').drop(['arranger','id_y'],axis=1).rename({'id_x':'id','name':'Arranger','last_name_x':'c_last_name','last_name_y':'a_last_name'},axis=1)
         
-        #self.__df_resolved_arrangement=df_resolved_arrangement.copy()
+        
         df_resolved_arrangement_goal = df_raw_arrangement_goal.merge(df_resolved_arrangement, how='left', left_on='arrangement_id', right_on='id').drop(['id_y'], axis=1).rename({'id_x':'id'}, axis=1)
         df_resolved_arrangement['Start Date'] = pd.to_datetime(df_resolved_arrangement['start_date']).dt.strftime("%m/%d/%Y")
+        self.__df_resolved_arrangement=df_resolved_arrangement.copy()
+
 
         # Build rendered dataframe for the table navigator
         df_summary = df_resolved_arrangement_goal.rename({'title':'Title', 'song_type':'Song Type','description':'Description','discovery_date':'Date Discovered'},axis=1).sort_values(['Date Discovered'], ascending=False)

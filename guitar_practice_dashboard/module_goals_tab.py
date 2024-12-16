@@ -14,12 +14,12 @@ df_goal_songs = df_goal_arrangements.drop_duplicates('song_id', keep='first')[['
 Logger = logger.FunctionLogger
 
 style_dict = {
-    'General':['red','#cf0c0c'],
+    'Classical':['red','#cf0c0c'],
     'Baroque':['blue','#180ccf'],
     'Romantic':['green','#16ba00'],
     'Spanish':['purple','#9600f0'],
     #'Style':['yellow','#ecff00'],
-    #'Style':['orange','#f78c00']
+    'Latin':['orange','#f78c00']
     }
 
 def custom_categorical_legend(legend_id, categories={'One':'red','Two':'Green','Three':'blue'},size=20, border_radius=5, border='1px solid black', title=None, title_padding='10px'):

@@ -61,7 +61,7 @@ def sessions_ui():
             ui.card(
                 ui.div(
                     output_widget(id='waffle_chart'),
-                    ui.img(src='guitar-head-stock.png', height="240px"),
+                    ui.img(src='guitar-head-stock.png', height="225px"),
                     id='guitar-neck-container',
                 ).add_style('width:1750px; overflow-x: auto; display: flex; margin:0px; padding:0px;'),
                 ui.div("* Indicates that a video recording was made that day.").add_style("text-align:right;"),
