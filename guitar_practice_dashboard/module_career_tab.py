@@ -225,18 +225,19 @@ def career_server(input, output, session):
         fig.update_layout(barmode='stack')
 
         fig.update_traces(
-            hovertemplate='Song: %{y}<br>Stage: %{customdata}<br>Practice Time (Hours): %{x}<extra></extra>',
+            hovertemplate='<b>Song:</b> %{y}<br><b>Stage:</b> %{customdata}<br><b>Practice Time (Hours):</b> %{x}<extra></extra>',
         )
 
         fig.update_layout(
             showlegend=False,
 
             # Main plot styling
-            font_family='EB Garamond',            
+            font_family='EB Garamond',  
+            font_size=14,          
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)', # background for all area that is not the plot marks themselves
-            xaxis_tickfont=dict(size=14), # y label styling
-            yaxis_tickfont=dict(size=14), # x label styling
+            xaxis_tickfont=dict(size=18), # y label styling
+            yaxis_tickfont=dict(size=18), # x label styling
             xaxis_gridcolor='#8c550c', # Vertical Tick Lines colored darker brown
             xaxis_zerolinecolor='#8c550c', # X- Zero vertical tick line colord darker brown
 
@@ -246,7 +247,7 @@ def career_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=14,
+                font_size=18,
                 font_family="EB Garamond",
                 bordercolor="black",
                 align="left"
@@ -333,7 +334,7 @@ def career_server(input, output, session):
 
         fig.update_traces(
             marker_color="#03A9F4",
-            hovertemplate='Exercise: %{y}<br>Practice Time (Hours): %{x}<extra></extra>',
+            hovertemplate='<b>Exercise:</b> %{y}<br><b>Practice Time (Hours):</b> %{x}<extra></extra>',
             #width=.5,
         )
         fig.update_layout(
@@ -346,7 +347,7 @@ def career_server(input, output, session):
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
             # Axis Label Size
-            yaxis_tickfont=dict(size=14),
+            yaxis_tickfont=dict(size=18),
             xaxis_gridcolor='#8c550c', # Vertical Tick Lines colored darker brown
             xaxis_zerolinecolor='#8c550c', # X- Zero vertical tick line colord darker brown
 
@@ -356,7 +357,7 @@ def career_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=14,
+                font_size=18,
                 font_family="EB Garamond",
                 bordercolor="black",
                 align="left"

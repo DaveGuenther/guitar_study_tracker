@@ -337,13 +337,13 @@ def sessions_server(input, output, session):
             plot_bgcolor="rgba(0, 0, 0, 0)",
 
             #Axis Label Style
-            yaxis_tickfont=dict(size=14),
+            yaxis_tickfont=dict(size=16),
             
 
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=14,
+                font_size=18,
                 font_family="EB Garamond",
                 bordercolor="black",
                 align="left"
@@ -376,8 +376,9 @@ def sessions_server(input, output, session):
             ))
         fig.update_traces(
             marker_color="#03A9F4",
-            hovertemplate='Song: %{y}<br>Practice Time (Minutes): %{x}<extra></extra>',
+            hovertemplate='<b>Song:</b> %{y}<br><b>Practice Time (Minutes):</b> %{x}<extra></extra>',
         )
+
         fig.update_layout(
             margin=dict(t=0, b=0, l=0, r=0),
             dragmode=False,
@@ -389,7 +390,7 @@ def sessions_server(input, output, session):
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
             # Axis Label Size
-            yaxis_tickfont=dict(size=14),
+            yaxis_tickfont=dict(size=16),
             #label = dict(yanchor='top'),
 
             height=50+(num_bars*20),
@@ -403,7 +404,7 @@ def sessions_server(input, output, session):
             # Tooltip Styling
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=14,
+                font_size=18,
                 font_family="EB Garamond",
                 bordercolor="black",
                 align="left"
@@ -437,13 +438,13 @@ def sessions_server(input, output, session):
                 
                 text=ret_dict['customdata'][2],
                 texttemplate="%{text}",
-                textfont={'size':14},
+                textfont={'size':16},
                 #hovertemplate='Date: %{customdata[1]}<br>Duration (Minutes): %{z}',           
                 
                 # Tooltip Styling
                 hoverlabel=dict(
                     bgcolor="white",
-                    font_size=14,
+                    font_size=18,
                     font_family="EB Garamond",
                     bordercolor="black",
                     align="left"
@@ -485,8 +486,8 @@ def sessions_server(input, output, session):
             font_color='#Ff9b15',
             paper_bgcolor='rgba(0, 0, 0, 0)',
             
-            xaxis_tickfont=dict(size=14),
-            yaxis_tickfont=dict(size=14),
+            xaxis_tickfont=dict(size=16),
+            yaxis_tickfont=dict(size=16),
 
             yaxis_dtick=1,
             autosize=False,
