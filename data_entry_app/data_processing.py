@@ -982,6 +982,19 @@ class GuitarInputTableModel(ShinyInputTableModel):
             # User selected New
         else:
             return pd.NaT
+        
+    def __init_string_install_date(self):
+        # provide initial value for the start date on the input form
+        if self._df_selected_id:
+            # User selected Update
+            date_strings_installed = self._db_table_model.df_raw[self._db_table_model.df_raw['id']==self._df_selected_id]['strings_install_date'].values[0]
+            if date_strings_installed:
+                return date_strings_installed
+            else:
+                return pd.NaT
+            # User selected New
+        else:
+            return pd.NaT        
 
     def __init_date_retired(self):
         # provide initial value for the start date on the input form
@@ -1024,6 +1037,7 @@ class GuitarInputTableModel(ShinyInputTableModel):
             ui.input_text(id="about",label="About *", value=self.__init_about()).add_style('color:red;'), #REQUIRED FIELD,
             ui.input_text(id="image_link",label="Image Link", value=self.__init_image_link()),
             ui.input_date(id="date_added",label=f"Date Added", value=self.__init_date_added()),
+            ui.input_date(id='date_strings_installed', label=f"Date Strings Installed", value=self.__init_string_install_date()),
             ui.input_date(id="date_retired",label=f"Date Retired", value=self.__init_date_retired()),
             ui.input_select(id="string_set_id",label="String Set *",choices=self.__string_set_lookup, selected=self.__init_string_set()).add_style('color:red;'), #REQUIRED FIELD
         ),
@@ -1066,6 +1080,7 @@ class GuitarInputTableModel(ShinyInputTableModel):
                                                 'about':[input.about()],
                                                 'image_link':[input.image_link()],
                                                 'date_added':[input.date_added()],
+                                                'strings_install_date':[input.date_strings_installed()],
                                                 'date_retired':[input.date_retired()],
                                                 'string_set_id':[string_set_id]})
                 
@@ -1154,7 +1169,8 @@ class SessionInputTableModel(ShinyInputTableModel):
         df_resolved_sessions['Session Date'] = pd.to_datetime(df_resolved_sessions['session_date']).dt.strftime("%m/%d/%Y")
         df_resolved_sessions = df_resolved_sessions.merge(df_raw_guitar,how='left', left_on='guitar_id',right_on='id').drop(['id_y'],axis=1).rename({'id_x':'id'}, axis=1)
         df_resolved_sessions = df_resolved_sessions.rename({'duration':'Duration','notes':'Notes','Title':'Song','video_url':'Video URL','make':'Guitar Make','model':'Guitar Model'},axis=1)
-        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Arranger','Notes', 'Video URL', 'Guitar Make', 'Guitar Model']].sort_values('Session Date', ascending=False)
+        df_resolved_sessions = df_resolved_sessions.sort_values('session_date', ascending=False)
+        self.df_summary = df_resolved_sessions[['id', 'Session Date', 'Duration', 'Song','Composer','Arranger','Notes', 'Video URL', 'Guitar Make', 'Guitar Model']]
         
         # Establish arrangement lookup
         df_sessions_copy = df_resolved_sessions.copy()
