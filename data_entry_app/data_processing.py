@@ -680,13 +680,13 @@ class ArrangementInputTableModel(ShinyInputTableModel):
 
                 #print("Inside Submit")
                 arranger_id = None if input.arranger() == '' else input.arranger()
-                style_id = None if input.style() == '' else input.style()
+                #style_id = None if input.style() == '' else input.style()
                 song_id = None if input.song()=='' else input.song()
                 # Create single row as dataframe
                 df_row_to_database = pd.DataFrame({'id':[self._df_selected_id],
                                                    #'title':[input.title()], # REQUIRED VALUE
                                                    'song_id':[song_id], #REQUIRED
-                                                   'style_id':[style_id],
+                                                   #'style_id':[style_id],
                                                    'difficulty':[input.difficulty()],
                                                    'sheet_music_link':[input.sheet_music_link()],
                                                    'performance_link':[input.performance_link()],
