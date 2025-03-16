@@ -29,6 +29,7 @@ Logger = logger.FunctionLogger
 
 df_sessions = globals.get_df_sessions()
 df_365 = globals.get_df_365()
+arrangements = df_365[df_365['Song'].notna()]['Song'].sort_values().unique()
 
 def table_calc_has_url(df_in):
     df_grouped_by_date = df_in.groupby('session_date') # grouped by date in order to capture an '*' if ANY recording weas posted that day
@@ -40,15 +41,24 @@ def table_calc_has_url(df_in):
 def sessions_ui():
 
     def sessions_filter_shelf(df_365):
-        arrangements = df_365[df_365['Song'].notna()]['Song'].unique()
+        
         ret_val = ui.div(
             ui.h3("Filters:"),
             ui.input_checkbox_group(
                 "arrangement_title",
-                "Song Title",
+                ui.div(
+                    ui.h5("Song Title"),
+                    ui.input_checkbox_group(
+                        "select_all_arrangements",
+                        label=None,
+                        choices={'All':'Select All'},
+                        selected=['All']
+                    ),
+                ),
                 choices={key:value for key,value in zip(arrangements, arrangements)},
                 selected=[key for key in arrangements],
-            ),
+            ).add_style('margin-bottom: 0;'),
+
         )
         return ret_val
 
@@ -106,6 +116,24 @@ def sessions_ui():
 def sessions_server(input, output, session):
     Logger(session.ns)
     df_session_data = reactive.value(df_sessions)
+    #select_all = reactive.value('all')
+
+    @reactive.effect
+    @reactive.event(input.select_all_arrangements)
+    def select_all_checked():
+        checked=input.select_all_arrangements()
+        if 'All' in checked:
+            #select all is checked, so all options are checked
+            ui.update_checkbox_group(
+                'arrangement_title',
+                selected=[key for key in arrangements]
+            ),
+        else:
+            ui.update_checkbox_group(
+                'arrangement_title',
+                selected=[]
+            ),            
+
 
     @reactive.calc
     def df_365_stage_1():
