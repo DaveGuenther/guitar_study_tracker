@@ -130,9 +130,10 @@ def arrangement_details_card_server(input, output, session, arr_id):
         ret_val = "None"
         embed_url = get_arr_record_from_id()['Performance Link']
         if embed_url:
-            embed_url = embed_url[0:embed_url.find('?')]
-            embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
-            ret_val = ui.div(ui.HTML(f"""<iframe src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>""")).add_class("day-modal-video"),
+            if embed_url!='None':
+                embed_url = embed_url[0:embed_url.find('?')]
+                embed_url = embed_url.replace('https://youtu.be/','https://youtube.com/embed/')
+                ret_val = ui.div(ui.HTML(f"""<iframe src="{embed_url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>""")).add_class("day-modal-video"),
         return ret_val
     
     @render.ui
