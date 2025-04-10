@@ -6,7 +6,6 @@ Run the following commands in order to clone the repo and run the shiny app loca
 
 The instructions below are just for the visual dashboard.  Configuring the data_entry_app to use the SQLite database for reading works fine, but writing against the local data cache isn't possible at this time due to the SQLite cache lacking an AUTO INCREMENT feature on each table's id column, unlike the live database.
 
-First clone this repo <code>git clone git@github.com:DaveGuenther/guitar_study_tracker.git</code> and navigate into the root folder of the repository on your workstation.  Then complete the following steps:
 ### Windows
 ``` shell
 git clone git@github.com:DaveGuenther/guitar_study_tracker.git
@@ -19,7 +18,8 @@ pip install -r requirements.txt
 
 ### Linux
 ``` linux
-cd guitar_practice_dashboard
+git clone git@github.com:DaveGuenther/guitar_study_tracker.git
+cd guitar_study_tracker/guitar_practice_dashboard
 python -m venv .venv
 source ./.venv/bin/activate
 pip install --upgrade pip setuptools wheel
