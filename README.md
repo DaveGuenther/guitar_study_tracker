@@ -6,13 +6,14 @@ Run the following commands in order to clone the repo and run the shiny app loca
 
 The instructions below are just for the visual dashboard.  Configuring the data_entry_app to use the sqllite database for reading works fine, but writing against the local data cache isn't possible at this time due to the sqllite cache lacking an AUTO INCREMENT feature on each table's id column, unlike the live database.
 
-First clone this repo and navigate into the root folder of the repository on your workstation.  Then complete the following steps:
+First clone this repo <code>git clone git@github.com:DaveGuenther/guitar_study_tracker.git</code> and navigate into the root folder of the repository on your workstation.  Then complete the following steps:
 ### Windows
 ``` shell
-cd guitar_practice_dashboard
+git clone git@github.com:DaveGuenther/guitar_study_tracker.git
+cd guitar_study_tracker/guitar_practice_dashboard
 python -m venv .venv
 source ./.venv/Scripts/activate
-pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -25,6 +26,9 @@ pip install --upgrade pip setuptools wheel
 sudo apt install libpq-dev   # for ubuntu systems  This is needed to pip install psycopg2
 pip install -r requirements.txt
 ```
+
+## Run Shiny App
+In order to run the shiny app locally simply use <code>shinyy run app.py</code>.  If you wish to run it from within VS Code, use the Open Folder command in VS Codde as described above and navigate to guitar_study_tracker/guitar_practice-dashboard as the project folder.  If you set up the virtual environment in this folder, you should be able to open app.py and then use either <code>Run Shiny App</code> or <code>Debug Shiny App</code> form the VS Code transport.
 
 ## Integrate with a Live SQL Database
 If you decide to integrate this dashboard with our own SQL database, follow these additional steps.  Create a file in the <code>/data_entry_app</code>, <code>/guitar_practice_dashboard</code>, and <code>/database_backup</code> directories called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
