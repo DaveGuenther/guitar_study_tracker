@@ -5,10 +5,11 @@ This is a shiny hobby app for ([data entry](https://dave-j-guenther.shinyapps.io
 Run the following commands in order to clone the repo and run the shiny app locally using a sqlite data cache instead of a live connection to a sql database.  You don't have to build your virtual environment in the guitar_study_tracker/guitar_practice_dashboard folder or guitar_study_tracker/data_entry_app folder, but I found tooling it this way made it easier to integrate with VS Code.  Within VS Code, you can use "Open Folder" to navigate to either the guitar_practice_dashboard or data_entry_app folder as the root of the project.  This way your virtual env is automatically detected and path is correct to load the cached sqllite data cache when you use "Run Shiny App" context menu from app.py  
 
 The instructions below are just for the visual dashboard.  Configuring the data_entry_app to use the sqllite database for reading works fine, but writing against the local data cache isn't possible at this time due to the sqllite cache lacking an AUTO INCREMENT feature on each table's id column, unlike the live database.
+
+First clone this repo and navigate into the root folder of the repository on your workstation.  Then complete the following steps:
 ### Windows
 ``` shell
-git clone git@github.com:DaveGuenther/guitar_study_tracker.git
-cd guitar_study_tracker/
+cd guitar_practice_dashboard
 python -m venv .venv
 source ./venv/Scripts/activate
 pip install --upgrade pip
@@ -17,8 +18,7 @@ pip install -r requirements.txt
 
 ### Linux
 ``` linux
-git clone git@github.com:DaveGuenther/guitar_study_tracker.git
-cd guitar_study_tracker/
+cd guitar_practice_dashboard
 python -m venv .venv
 source ./venv/bin/activate
 pip install --upgrade pip setuptools wheel
