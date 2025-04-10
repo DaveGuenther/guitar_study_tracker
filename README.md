@@ -31,7 +31,10 @@ pip install -r requirements.txt
 In order to run the shiny app locally simply use <code>shiny run app.py</code>.  If you wish to run it from within VS Code, use the Open Folder command in VS Codde as described above and navigate to guitar_study_tracker/guitar_practice-dashboard as the project folder.  If you set up the virtual environment in this folder, you should be able to open app.py and then use either <code>Run Shiny App</code> or <code>Debug Shiny App</code> form the VS Code transport.
 
 ## Integrate with a Live SQL Database
-If you decide to integrate this dashboard with our own SQL database, have a look at the pdf diagram of the database schema (https://github.com/DaveGuenther/guitar_study_tracker/blob/dceef06cc48cce3bba9b5782596d2a4737655e96/docs/Guitar_Study_Tracker_Input.pdf) and follow these additional steps.  Create a file in the <code>/data_entry_app</code>, <code>/guitar_practice_dashboard</code>, and <code>/database_backup</code> directories called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
+If you decide to integrate this dashboard with our own SQL database, have a look at the pdf diagram of the database schema before continuing with the steps below: <br>
+<img width="415" alt="image" src="https://github.com/user-attachments/assets/f0f6adc5-cb16-41f0-9531-f41417775720" />
+<br>
+Create a file in the <code>/data_entry_app</code>, <code>/guitar_practice_dashboard</code>, and <code>/database_backup</code> directories called "variables.env" that contains key value pairs for environment variables that we want to load into our app (replace values below with actual database values):
 ``` text
 # variables.env
 pg_user='*****' # Read only password
