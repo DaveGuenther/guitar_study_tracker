@@ -11,7 +11,7 @@ First clone this repo and navigate into the root folder of the repository on you
 ``` shell
 cd guitar_practice_dashboard
 python -m venv .venv
-source ./venv/Scripts/activate
+source ./.venv/Scripts/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ``` linux
 cd guitar_practice_dashboard
 python -m venv .venv
-source ./venv/bin/activate
+source ./.venv/bin/activate
 pip install --upgrade pip setuptools wheel
 sudo apt install libpq-dev   # for ubuntu systems  This is needed to pip install psycopg2
 pip install -r requirements.txt
