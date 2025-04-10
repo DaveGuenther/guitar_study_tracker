@@ -234,7 +234,10 @@ def sessions_server(input, output, session):
             return ret_html # return the HTML content for the video link cell
             
         df_out = df_in
-        df_out['Video Link'] = df_out.apply(lambda row: vid_link_module(row), axis=1)
+        if df_out.shape[0]>0:
+            df_out['Video Link'] = df_out.apply(lambda row: vid_link_module(row), axis=1)
+        else:
+            df_out['Video Link']=None # No practice session data found for the past week
         return df_out.copy()
 
     @render.data_frame
