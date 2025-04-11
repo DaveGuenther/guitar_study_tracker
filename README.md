@@ -26,6 +26,16 @@ pip install --upgrade pip setuptools wheel
 sudo apt install libpq-dev   # for ubuntu systems  This is needed to pip install psycopg2
 pip install -r requirements.txt
 ```
+### MacOS (Homebrew)
+``` linux
+git clone git@github.com:DaveGuenther/guitar_study_tracker.git
+cd guitar_study_tracker/guitar_practice_dashboard
+python3 -m venv .venv
+source ./.venv/bin/activate
+pip3 install --upgrade pip setuptools wheel
+brew install postgresql
+pip3 install -r requirements.txt
+```
 
 ## Run Shiny App
 In order to run the shiny app locally simply use <code>shiny run app.py</code>.  If you wish to run it from within VS Code, use the Open Folder command in VS Codde as described above and navigate to guitar_study_tracker/guitar_practice-dashboard as the project folder.  If you set up the virtual environment in this folder, you should be able to open app.py and then use either <code>Run Shiny App</code> or <code>Debug Shiny App</code> form the VS Code transport.
