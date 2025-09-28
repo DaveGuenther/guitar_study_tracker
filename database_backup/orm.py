@@ -1,13 +1,17 @@
 # Core
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Data Integration
 from sqlalchemy import Column, Integer, Text, Date, Boolean
 from sqlalchemy.schema import Table, MetaData
 from sqlalchemy.orm import declarative_base
 
-load_dotenv("variables.env")
+cwd = Path(__file__).parent
+env_path = cwd.joinpath('variables.env')
+
+load_dotenv(env_path)
 schema=os.getenv("pg_schema")
 if not schema:
     schema = 'main'

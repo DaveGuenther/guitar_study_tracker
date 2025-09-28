@@ -2,17 +2,20 @@
 from dotenv import load_dotenv
 import os
 import sqlite3
+from pathlib import Path
 
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+cwd = Path(__file__).parent
+env_path = cwd.joinpath('variables.env')
 
 import orm # database models
 import database 
 print("Loading variables.env")
 # pull database location and credential information from env variables
-load_dotenv("variables.env")
+load_dotenv(env_path)
 
 # Establish database session minus credentials
 remote_pg_session = database.DatabaseSession(
@@ -55,7 +58,8 @@ remote_guitar_model.connect(user_name, pw, read_only_acct)
 print("Opening local SQLite Database")
 #%%
 #### Create Local SQLite Database
-engine = create_engine('sqlite:///local_guitar_data.db') 
+db_path = cwd.joinpath('local_guitar_data.db').resolve().as_posix()
+engine = create_engine(f'sqlite:///{db_path}') 
 
 Session = sessionmaker(bind=engine)
 session=Session()

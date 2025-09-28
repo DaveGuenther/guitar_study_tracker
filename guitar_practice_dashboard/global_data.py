@@ -1,12 +1,15 @@
 # Core
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 # App Specific Code
 import orm # database models
 from database import DatabaseSession, DatabaseModel
 import data_prep
 
+cwd = Path(__file__).parent
+env_path = cwd.joinpath('variables.env')
 
 class GlobalData:
     """
@@ -23,7 +26,7 @@ class GlobalData:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(GlobalData, cls).__new__(cls)
-            load_dotenv("variables.env")
+            load_dotenv(env_path)
 
             # Establish database session minus credentials
             pg_session = DatabaseSession(
