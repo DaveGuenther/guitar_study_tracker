@@ -200,8 +200,8 @@ def career_server(input, output, session):
 
 
         stage_order = ['Learning Notes','Achieving Tempo','Phrasing','Maintenance']
-        title_order = list(df_arrangement_grindage.groupby('Title')['Duration'].sum().sort_values(ascending=True).index)
-        trace_dict = make_stacked_bar_traces(df_arrangement_grindage['Title'], df_arrangement_grindage['Stage'],round((df_arrangement_grindage['Duration']/60)*10)/10, dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
+        title_order = list(df_arrangement_grindage.groupby('Full Title')['Duration'].sum().sort_values(ascending=True).index)
+        trace_dict = make_stacked_bar_traces(df_arrangement_grindage['Full Title'], df_arrangement_grindage['Stage'],round((df_arrangement_grindage['Duration']/60)*10)/10, dimension_a_unique_sort_order=title_order, dimension_b_unique_sort_order=stage_order)
 
         category_colors={'Learning Notes':['#801100',4],
                          'Achieving Tempo':['#d73502',3],

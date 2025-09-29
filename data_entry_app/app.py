@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import logging
+from pathlib import Path
 
 # Web/Visual frameworks
 from shiny import App, ui, render, reactive, types, req, module
@@ -15,8 +16,11 @@ from table_navigator import ShinyFormTemplate
 
 #logging.basicConfig(filename='myapp.log', level=logging.INFO)
 
+cwd = Path(__file__).parent
+env_path = cwd.joinpath('variables.env')
+
 # pull database location and credential information from env variables
-load_dotenv("variables.env")
+load_dotenv(env_path)
 
 # Establish database session minus credentials
 pg_session = DatabaseSession(

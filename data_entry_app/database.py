@@ -2,6 +2,7 @@
 import os
 #from dotenv import load_dotenv
 import pandas as pd
+from pathlib import Path
 
 # Data Integration
 from sqlalchemy import create_engine, select, insert, update, delete
@@ -10,6 +11,10 @@ from sqlalchemy.schema import Table
 
 # App specific
 import orm
+
+cwd = Path(__file__).parent
+db_path = cwd.joinpath('local_guitar_data.db')
+
 
 class DatabaseSession:
     """
@@ -30,7 +35,7 @@ class DatabaseSession:
             connect_string = f'postgresql+psycopg2://{user}:{password}@{self.__host}:{self.__port}/{self.__dbname}'
         else:
             print("variables.env not detected...  Loading local sqllite datebase")
-            connect_string=f'sqlite:///local_guitar_data.db'
+            connect_string=f'sqlite:///{db_path.resolve().as_posix()}'
 
         # Connect to db and establish session
         engine = create_engine(connect_string)

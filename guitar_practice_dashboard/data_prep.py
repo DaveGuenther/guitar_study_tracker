@@ -4,6 +4,17 @@ import datetime
 import pytz
 import calendar
 
+# Create Artist/Arranger/Title column for Career Chart to keep arrangements unique among songs
+def arrangement_concatenator(composer, arranger, title):
+    composer_last_name = composer[-1]
+    arranger_last_name = arranger[-1]
+    ret_val = ''
+    if composer_last_name==arranger_last_name:
+        ret_val = f'{composer_last_name}: {title}'
+    else:
+        ret_val = f'{composer_last_name}/{arranger_last_name}: {title}'
+    return ret_val
+
 def processArsenalData(session_model, guitar_model, string_set_model):
     df_guitar_raw = guitar_model.df_raw
     df_string_raw = string_set_model.df_raw
@@ -168,7 +179,9 @@ def processArrangementGrindageData(session_model, arrangement_model, song_model,
     df_grindage['End Date'] = df_grindage.apply(getStageEndDates, axis=1)
     df_grindage['End Date'] = df_grindage['End Date'].fillna(today)
     df_grindage = df_grindage.rename({'stage':'Stage','duration':'Duration','title':'Title','composer':'Composer','arranger':'Arranger','song_type':'Song Type'},axis=1)
-    df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Song Type','Start Date','End Date']]
+    df_grindage['Full Title'] = df_grindage.apply(lambda row: arrangement_concatenator(row['Composer'].split(), row['Arranger'].split(), row['Title']) if row['Song Type']=='Song' else f'{(row['Composer'].split()[-1])}: {(row['Title'])}', axis=1)
+
+    df_grindage = df_grindage[['Stage','Duration','id','Title','Composer','Arranger','Song Type','Start Date','End Date', 'Full Title']]
     return df_grindage
 
 def processSongGoalsData(arrangement_model, arrangement_goal_model, song_model, artist_model, style_model):
@@ -194,6 +207,7 @@ def processSongGoalsData(arrangement_model, arrangement_goal_model, song_model, 
     df_resolved_arrangement_goals = df_resolved_arrangement_goals[['id','song_id','Discovery Date','Description','Difficulty','Sheet Music Link','Performance Link','Arranger','Title','Song Type','Composer','Style']]
     df_resolved_arrangement_goals['id'] = df_resolved_arrangement_goals['id'].astype(str)
     df_resolved_arrangement_goals['song_id'] = df_resolved_arrangement_goals['song_id'].astype(str)
+        
     return df_resolved_arrangement_goals.copy()
 
 
